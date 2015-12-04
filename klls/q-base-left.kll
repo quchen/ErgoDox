@@ -1,0 +1,79 @@
+Name = Quchen left base map;
+Version = 0.1;
+Author = "quchen (David Luposchainsky) 2015";
+KLL = 0.3c;
+
+# Modified Date
+Date = 2015-12-01;
+
+################################################
+#                                              #
+#    +------+----+----+----+----+----+----+    #
+#    |  08  | 07 | 06 | 05 | 04 | 03 | 02 |    #
+#    +------+----+----+----+----+----+----+    #
+#    |  11  | 10 | 0f | 0e | 0d | 0c | 0b |    #
+#    +------+----+----+----+----+----+    |    #
+#    |  1a  | 19 | 18 | 17 | 16 | 15 +----+    #
+#    +------+----+----+----+----+----+    |    #
+#    |  23  | 22 | 21 | 20 | 1f | 1e | 1d |    #
+#    +-+----+----+----+----+----+----+----+    ######
+#      | 2c | 2b | 2a | 29 | 28 |                   #
+#      +----+----+----+----+----+    +----+----+    #
+#                                    | 1c | 1b |    #
+############################    +----+----+----+    #
+                           #    |    |    | 24 |    #
+                           #    | 27 | 26 +----+    #
+                           #    |    |    | 25 |    #
+                           #    +----+----+----+    #
+                           #                        #
+                           ##########################
+
+# Top row
+S0x08 : U"Equals";
+S0x07 : U"1";
+S0x06 : U"2";
+S0x05 : U"3";
+S0x04 : U"4";
+S0x03 : U"5";
+S0x02 : U"Esc";
+
+# Top-middle row
+S0x11 : U"Tab";
+S0x10 : U"Q";
+S0x0F : U"W";
+S0x0E : U"E";
+S0x0D : U"R";
+S0x0C : U"T";
+S0x0B : U"Function1"; # Top 1.5
+
+# Middle row
+S0x1A : U"Backslash";
+S0x19 : U"A";
+S0x18 : U"S";
+S0x17 : U"D";
+S0x16 : U"F";
+S0x15 : U"G";
+
+# Bottom-middle row
+S0x23 : U"LShift";
+S0x22 : U"Z";
+S0x21 : U"X";
+S0x20 : U"C";
+S0x1F : U"V";
+S0x1E : U"B";
+S0x1D : U"Function2"; # Bottom 1.5
+
+# Bottom row
+S0x2C : U"LCtrl";
+S0x2B : U"Backtick";
+S0x2A : U"Function3";
+S0x29 : U"Function4";
+S0x28 : U"Function5";
+
+# Thumb cluster
+S0x1C : U"LGui";      # top middle
+S0x1B : U"LAlt";      # top right
+S0x27 : U"Backspace"; # left
+S0x26 : U"Delete";    # middle
+S0x25 : U"End";       # right bottom
+S0x24 : U"Home";      # right middle

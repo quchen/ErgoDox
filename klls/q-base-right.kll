@@ -1,0 +1,79 @@
+Name = Quchen right base map;
+Version = 0.1;
+Author = "quchen (David Luposchainsky) 2015";
+KLL = 0.3c;
+
+# Modified Date
+Date = 2015-12-01;
+
+     ################################################
+     #                                              #
+     #    +----+----+----+----+----+----+------+    #
+     #    | 02 | 03 | 04 | 05 | 06 | 07 |  08  |    #
+     #    +----+----+----+----+----+----+------+    #
+     #    | 0b | 0c | 0d | 0e | 0f | 10 |  11  |    #
+     #    |    +----+----+----+----+----+------+    #
+     #    +----+ 15 | 16 | 17 | 18 | 19 |  1a  |    #
+     #    |    +----+----+----+----+----+------+    #
+     #    | 1d | 1e | 1f | 20 | 21 | 22 |  23  |    #
+######    +----+----+----+----+----+----+----+-+    #
+#                   | 28 | 29 | 2a | 2b | 2c |      #
+#    +----+----+    +----+----+----+----+----+      #
+#    | 1b | 1c |                                    #
+#    +----+----+----+    ############################
+#    | 24 |    |    |    #
+#    +----+ 26 | 27 |    #
+#    | 25 |    |    |    #
+#    +----+----+----+    #
+#                        #
+##########################
+
+# Top row
+S0x02 : U"Function6";
+S0x03 : U"6";
+S0x04 : U"7";
+S0x05 : U"8";
+S0x06 : U"9";
+S0x07 : U"0";
+S0x08 : U"Minus";
+
+# Top-middle row
+S0x0B : U"RBrace"; # Top 1.5
+S0x0C : U"Y";
+S0x0D : U"U";
+S0x0E : U"I";
+S0x0F : U"O";
+S0x10 : U"P";
+S0x11 : U"LBrace";
+
+# Middle row
+S0x15 : U"H";
+S0x16 : U"J";
+S0x17 : U"K";
+S0x18 : U"L";
+S0x19 : U"Semicolon";
+S0x1A : U"Quote";
+
+# Bottom-middle row
+S0x1D : U"Function7"; # Bottom 1.5
+S0x1E : U"N";
+S0x1F : U"M";
+S0x20 : U"Comma";
+S0x21 : U"Period";
+S0x22 : U"Slash";
+S0x23 : U"RShift";
+
+# Bottom row
+S0x28 : U"Left";
+S0x29 : U"Down";
+S0x2A : U"Up";
+S0x2B : U"Right";
+S0x2C : U"RGui";
+
+# Thumb cluster
+S0x1B : U"RAlt";     # top left
+S0x1C : U"RCtrl";    # top middle
+S0x24 : U"PageUp";   # left middle
+S0x25 : U"PageDown"; # left bottom
+S0x26 : U"Enter";    # middle
+S0x27 : U"Space";    # right

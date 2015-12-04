@@ -1,0 +1,11 @@
+Name = Flash button;
+Version = 0.1;
+Author = "quchen (David Luposchainsky) 2015";
+KLL = 0.3c;
+
+# Modified Date
+Date = 2015-12-01;
+
+# Flash on pushing all corner buttons
+
+S[0x08] + S[0x02] + S[0x25] + S[0x2c] : flashMode();

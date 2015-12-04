@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  SELFDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SELFDIR/$SOURCE"
+done
+SELFDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+cd $SELFDIR
+
+export EUID
+
+cabal exec runghc -- \
+    -Wall \
+    -rtsopts -with-rtsopts=-I0 \
+    -XLambdaCase \
+    Build.hs \
+    --colour --jobs=0 \
+    "$@"
+

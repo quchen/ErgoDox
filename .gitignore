@@ -1,0 +1,4 @@
+.cabal-sandbox
+.shake
+cabal.sandbox.config
+ttyecho/ttyecho

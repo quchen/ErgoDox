@@ -1,0 +1,3 @@
+[submodule "controller"]
+	path = controller
+	url = git@github.com:kiibohd/controller.git

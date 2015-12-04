@@ -1,0 +1,18 @@
+Name = Quchen arrow keys;
+Version = 0.1;
+Author = "quchen (David Luposchainsky) 2015";
+KLL = 0.3c;
+
+# Modified Date
+Date = 2015-12-01;
+
+U"I" : U"Up";
+U"J" : U"Left";
+U"K" : U"Down";
+U"L" : U"Right";
+
+U"H" : U"Home";
+U"Semicolon" : U"End";
+
+U"8" : U"PageUp";
+U"Comma" : U"PageDown";

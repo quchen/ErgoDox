@@ -1,0 +1,14 @@
+Name = Enable remote flashing;
+Version = 0.1;
+Author = "quchen (David Luposchainsky) 2015";
+KLL = 0.3c;
+
+# Modified Date
+Date = 2015-12-02;
+
+# Enable remote flashing (disabled by default for security reasons)
+#
+# Usage:
+# > screen /dev/ttyACM0
+# > reload
+flashModeEnabled = 1;
