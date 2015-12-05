@@ -37,11 +37,10 @@ buildHalf half = do
 
 buildFirmware :: Rules ()
 buildFirmware = loadFirmwareElfs &%> \_ -> do
-    need ["controller/kll"]
+    need ["controller/kll", "controller/Keyboards/q-dox.bash"]
     baseKlls <- getDirectoryFiles "" ["controller/Scan/MDErgo1/q-*.kll"]
     customKlls <- getDirectoryFiles "" ["controller/kll/layouts/q-*.kll"]
-    let scripts = ["controller/Keyboards/q-dox.bash"]
-    need (baseKlls <> customKlls <> scripts)
+    need (baseKlls <> customKlls)
     cmd (Cwd "controller/Keyboards") "./q-dox.bash"
   where
     loadFirmwareElfs = map loaderElf [L,R]
