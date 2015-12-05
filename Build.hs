@@ -15,12 +15,11 @@ import Data.Foldable
 
 import Config ( BaseMap(..), Chip(..), Compiler(..), DebugModule(..)
               , DefaultMap(..), Layer(..), MacroModule(..), OutputModule(..)
-              , PartialMaps(..), ScanModule(..) )
+              , PartialMaps(..), ScanModule(..)
+              , Half(..) )
 import qualified Config as Cfg
 
 
-
-data Half = L | R
 
 pprHalf :: Half -> String
 pprHalf = \case
@@ -32,7 +31,7 @@ leftHalf, rightHalf :: Rules ()
   where
     makePhony half = phony (pprHalf half) (do
         need [loaderElf half]
-        -- installFirmware half
+        installFirmware half
         )
 
 loaderElf :: Half -> FilePath
@@ -52,7 +51,7 @@ buildLoader half = loaderElf half %> (\_ -> moveKlls >> build)
     moveKlls = moveBaseMap >> moveDefaultMap >> moveLayers
 
     moveBaseMap = do
-        let BaseMap baseMap = Cfg.baseMap
+        let BaseMap baseMap = Cfg.baseMap half
         for_ baseMap (\kll ->
             let kllFile = kll <.> "kll"
                 src = "klls" </> kllFile
@@ -83,25 +82,24 @@ buildLoader half = loaderElf half %> (\_ -> moveKlls >> build)
         cmd (Cwd ("controller/Keyboards" </> buildPath half))
             (Traced ("Generating " <> pprHalf half <> " makefile"))
             "cmake"
-            ("-DCHIP="         <> let Chip         x = Cfg.chip         in x)
-            ("-DCOMPILER="     <> let Compiler     x = Cfg.compiler     in x)
-            ("-DScanModule="   <> let ScanModule   x = Cfg.scanModule   in x)
-            ("-DMacroModule="  <> let MacroModule  x = Cfg.macroModule  in x)
-            ("-DOutputModule=" <> let OutputModule x = Cfg.outputModule in x)
-            ("-DDebugModule="  <> let DebugModule  x = Cfg.debugModule  in x)
-            ("-DBaseMap="      <> let BaseMap x = Cfg.baseMap
-                                  in intercalate " " x )
-            ("-DDefaultMap="   <> let DefaultMap x = Cfg.defaultMap
-                                  in intercalate " " x )
-            ("-DPartialMaps="  <> let PartialMaps pms = Cfg.partialMaps
+            ["-DCHIP="         <> let Chip         x = Cfg.chip         in x]
+            ["-DCOMPILER="     <> let Compiler     x = Cfg.compiler     in x]
+            ["-DScanModule="   <> let ScanModule   x = Cfg.scanModule   in x]
+            ["-DMacroModule="  <> let MacroModule  x = Cfg.macroModule  in x]
+            ["-DOutputModule=" <> let OutputModule x = Cfg.outputModule in x]
+            ["-DDebugModule="  <> let DebugModule  x = Cfg.debugModule  in x]
+            ["-DBaseMap="      <> let BaseMap x = Cfg.baseMap half
+                                  in intercalate " " x ]
+            ["-DDefaultMap="   <> let DefaultMap x = Cfg.defaultMap
+                                  in intercalate " " x ]
+            ["-DPartialMaps="  <> let PartialMaps pms = Cfg.partialMaps
                                       layers = [ intercalate " " layer
                                                | Layer layer <- pms]
-                                  in intercalate ";" layers )
+                                  in intercalate ";" layers ]
             "../.." // ()
         cmd (Cwd ("controller/Keyboards" </> buildPath half))
             (Traced ("Compiling " <> pprHalf half <> " half"))
             "make"
-
 
 
 kllDir :: Rules ()
@@ -126,12 +124,12 @@ kllDir = "controller/kll" %> \_ ->
 
 
 
--- installFirmware :: Half -> Action ()
--- installFirmware half = do
---     need [loaderElf half]
---     -- primeController
---     let (wd, elf) = splitFileName (loaderElf half)
---     cmd (Cwd wd) ("sudo ./" <> elf)
+installFirmware :: Half -> Action ()
+installFirmware half = do
+    need [loaderElf half]
+    -- primeController
+    let (wd, elf) = splitFileName (loaderElf half)
+    cmd (Cwd wd) ("sudo ./" <> elf)
 
 
 

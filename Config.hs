@@ -22,19 +22,28 @@ module Config (
     MacroModule(..),
     OutputModule(..),
     PartialMaps(..),
-    ScanModule(..)
+    ScanModule(..),
+
+    Half(..)
 ) where
 
 
+-- | Should probably go into its own module, but is here for now (tm)
+data Half = L | R
 
-baseMap :: BaseMap
-baseMap = BaseMap
-    [ "base-left"
-    , "flash-remote"
-    , "flash"
-    , "switch-to-slave-1"
-    , "flash"
-    , "base-right" ]
+-- | Base map parametrized over the primary half. If you get this wrong, the
+-- two sides are mirrored. :-)
+baseMap :: Half -> BaseMap
+baseMap half = BaseMap (always ++ chiral)
+  where
+    always    = [ "flash-remote" ]
+    rightHalf = [ "flash", "base-right" ]
+    leftHalf  = [ "flash", "base-left" ]
+    switch    = [ "switch-to-slave-1" ]
+
+    chiral = case half of
+        L -> leftHalf  ++ switch ++ rightHalf
+        R -> rightHalf ++ switch ++ leftHalf
 
 defaultMap :: DefaultMap
 defaultMap = DefaultMap
