@@ -109,8 +109,15 @@ firstTty = do
 
 clean :: Rules ()
 clean = phony "clean" (do
-    cmd (Cwd "controller") "git clean -df"
+    cmd (Cwd "controller") "git clean -df" // ()
     cmd (Cwd "controller/kll") "git clean -df" )
+
+
+
+-- | Postfix version of 'unit'
+(//) :: m () -> a -> m ()
+x // _ = unit x
+infix 1 //
 
 
 

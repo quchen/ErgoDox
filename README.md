@@ -9,4 +9,3 @@ To do:
   shake system
 - Configure via Shake config file instead of editing the `.bash`
 - Auto-prime the microcontroller for flashing
-- Clean target
