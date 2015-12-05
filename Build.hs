@@ -6,7 +6,7 @@ module Build (main) where
 
 
 import Data.Foldable
-import Data.List (intercalate, sort, group)
+import Data.List (intercalate)
 import Data.Monoid
 import System.Console.GetOpt
 
@@ -170,24 +170,6 @@ installFirmware half FlashAfterBuild = do
 
 clean :: Rules ()
 clean = phony "clean" (do
-    let toDelete = fastNub (baseMapFiles <> defaultMapFiles <> partialMapsFiles)
-          where
-            BaseMap baseMapL = Cfg.baseMap L
-            BaseMap baseMapR = Cfg.baseMap R
-            baseMapFiles = [ "controller/Scan/MDErgo1" </> kll <.> "kll"
-                           | kll <- baseMapL ++ baseMapR ]
-            DefaultMap defaultMap = Cfg.defaultMap
-            defaultMapFiles = [ "controller/kll/layouts" </> kll <.> "kll"
-                              | kll <- defaultMap ]
-            PartialMaps layers = Cfg.partialMaps
-            partialMapsFiles = [ "controller/kll/layouts" </> kll <.> "kll"
-                               | Layer layer <- layers
-                               , kll <- layer ]
-            fastNub = map head . group . sort
-    putNormal "Deleting copied .kll files:"
-    for_ toDelete (\kll -> putNormal ("    " <> kll))
-    removeFilesAfter "" toDelete
-
     cmd (Cwd "controller") (Traced "git clean controller")
         "git clean -df" // ()
     cmd (Cwd "controller/kll") (Traced "git clean controller/kll")
