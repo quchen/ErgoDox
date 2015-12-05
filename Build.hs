@@ -48,8 +48,9 @@ buildFirmware = loadFirmwareElfs &%> \_ -> do
 
 
 kllDir :: Rules ()
-kllDir = "controller/kll" %> \_ -> do
-    cmd "./controller/Keyboards/template.bash"
+kllDir = "controller/kll" %> \_ ->
+    cmd (Cwd "controller/Keyboards") (Traced "Dummy build for initialization")
+        "./template.bash"
 
 
 
