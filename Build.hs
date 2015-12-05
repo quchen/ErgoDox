@@ -1,6 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 {-# OPTIONS_GHC -Wall #-}
 
+-- | Fire-and-forget build script to configure the Infinity Ergodox
+-- firmware.
+--
+-- Userland configuration is in "Config.hs".
 module Build (main) where
 
 
@@ -53,12 +57,39 @@ buildPath = \case
 
 
 buildLoader :: Half -> Rules ()
-buildLoader half = loaderElf half %> (\_ -> moveKlls >> build)
-  where
-    -- Move .kll files to their appropriate target folder so the compilation
-    -- script has them in the right locations
-    moveKlls = moveBaseMap >> moveDefaultMap >> moveLayers
+buildLoader half = loaderElf half %> (\_ -> do
+    moveKlls half
+    cmd (Cwd "controller/Keyboards")
+        (Traced "Creating build output dir")
+        "mkdir -p" [buildPath half] // ()
+    cmd (Cwd ("controller/Keyboards" </> buildPath half))
+        (Traced ("Generating " <> pprHalf half <> " makefile"))
+        "cmake"
+        ["-DCHIP="         <> let Chip         x = Cfg.chip         in x]
+        ["-DCOMPILER="     <> let Compiler     x = Cfg.compiler     in x]
+        ["-DScanModule="   <> let ScanModule   x = Cfg.scanModule   in x]
+        ["-DMacroModule="  <> let MacroModule  x = Cfg.macroModule  in x]
+        ["-DOutputModule=" <> let OutputModule x = Cfg.outputModule in x]
+        ["-DDebugModule="  <> let DebugModule  x = Cfg.debugModule  in x]
+        ["-DBaseMap="      <> let BaseMap x = Cfg.baseMap half
+                              in intercalate " " x ]
+        ["-DDefaultMap="   <> let DefaultMap x = Cfg.defaultMap
+                              in intercalate " " x ]
+        ["-DPartialMaps="  <> let PartialMaps pms = Cfg.partialMaps
+                                  layers = [ intercalate " " layer
+                                           | Layer layer <- pms]
+                              in intercalate ";" layers ]
+        "../.." // ()
+    cmd (Cwd ("controller/Keyboards" </> buildPath half))
+        (Traced ("Compiling " <> pprHalf half <> " half"))
+        "make" )
 
+
+-- | Move .kll files to their appropriate target folder so the compilation
+-- script has them in the right locations
+moveKlls :: Half -> Action ()
+moveKlls half = moveBaseMap >> moveDefaultMap >> moveLayers
+  where
     moveBaseMap = do
         let BaseMap baseMap = Cfg.baseMap half
         for_ baseMap (\kll ->
@@ -84,33 +115,6 @@ buildLoader half = loaderElf half %> (\_ -> moveKlls >> build)
                     dest = "controller/kll/layouts" </> kllFile
                 in copyFileChanged src dest ))
 
-    build = do
-        cmd (Cwd "controller/Keyboards")
-            (Traced "Creating build output dir")
-            "mkdir -p" [buildPath half] // ()
-        cmd (Cwd ("controller/Keyboards" </> buildPath half))
-            (Traced ("Generating " <> pprHalf half <> " makefile"))
-            "cmake"
-            ["-DCHIP="         <> let Chip         x = Cfg.chip         in x]
-            ["-DCOMPILER="     <> let Compiler     x = Cfg.compiler     in x]
-            ["-DScanModule="   <> let ScanModule   x = Cfg.scanModule   in x]
-            ["-DMacroModule="  <> let MacroModule  x = Cfg.macroModule  in x]
-            ["-DOutputModule=" <> let OutputModule x = Cfg.outputModule in x]
-            ["-DDebugModule="  <> let DebugModule  x = Cfg.debugModule  in x]
-            ["-DBaseMap="      <> let BaseMap x = Cfg.baseMap half
-                                  in intercalate " " x ]
-            ["-DDefaultMap="   <> let DefaultMap x = Cfg.defaultMap
-                                  in intercalate " " x ]
-            ["-DPartialMaps="  <> let PartialMaps pms = Cfg.partialMaps
-                                      layers = [ intercalate " " layer
-                                               | Layer layer <- pms]
-                                  in intercalate ";" layers ]
-            "../.." // ()
-        cmd (Cwd ("controller/Keyboards" </> buildPath half))
-            (Traced ("Compiling " <> pprHalf half <> " half"))
-            "make"
-
-
 kllDir :: Rules ()
 kllDir = "controller/kll" %> \_ ->
     cmd (Cwd "controller/Keyboards")
@@ -134,7 +138,7 @@ kllDir = "controller/kll" %> \_ ->
 
 
 installFirmware :: Half -> Flash -> Action ()
-installFirmware _ NoFlash = putNormal "Skipping flashing due to missing --flash flag"
+installFirmware _ NoFlash = putNormal "Flashing skipped (enable with --flash)"
 installFirmware half FlashAfterBuild = do
     need [loaderElf half]
     -- primeController
@@ -197,11 +201,12 @@ flagSpecs =
 
 main :: IO ()
 main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
-    let rules' | FlashFlag `elem` flags = rules FlashAfterBuild
-               | otherwise              = rules NoFlash
-    in if null targets
-        then rules'
-        else want targets >> withoutActions rules' )))
+    let flashFlag | FlashFlag `elem` flags = FlashAfterBuild
+                  | otherwise              = NoFlash
+        rules' = rules flashFlag
+        rules'' | null targets = rules'
+                | otherwise = want targets >> withoutActions rules'
+    in rules'' )))
   where
     rules flash = mconcat [leftHalf flash, rightHalf flash, buildLoader L, buildLoader R, clean, kllDir]
     options = shakeOptions
