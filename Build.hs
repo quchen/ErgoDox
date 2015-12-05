@@ -36,7 +36,7 @@ buildHalf half = do
 
 
 buildFirmware :: Rules ()
-buildFirmware = loads &%> \_ -> do
+buildFirmware = loadFirmwareElfs &%> \_ -> do
     need ["controller/kll"]
     baseKlls <- getDirectoryFiles "" ["controller/Scan/MDErgo1/q-*.kll"]
     customKlls <- getDirectoryFiles "" ["controller/kll/layouts/q-*.kll"]
@@ -44,8 +44,7 @@ buildFirmware = loads &%> \_ -> do
     need (baseKlls <> customKlls <> scripts)
     cmd (Cwd "controller/Keyboards") "./q-dox.bash"
   where
-    loads = [ "controller/Keyboards/quchen-left/load"
-            , "controller/Keyboards/quchen-right/load" ]
+    loadFirmwareElfs = map loaderElf [L,R]
 
 
 
@@ -67,7 +66,7 @@ qdox = "controller/Keyboards/q-dox.bash" %> \_ -> do
 
 ttyecho :: Rules ()
 ttyecho = "ttyecho/ttyecho" %> \out ->
-    cmd (Cwd (takeDirectory out)) "make" "ttyecho"
+    cmd (Cwd (takeDirectory out)) "make ttyecho"
 
 
 
@@ -76,14 +75,6 @@ ensureSudo = getEnv "EUID" >>= \case
     -- Nothing                 -> fail "EUID not set"
     -- Just euid | euid /= "0" -> fail "Script must be run as root"
     _else                   -> pure ()
-
-
-
-primeController :: Action ()
-primeController = do
-    need ["ttyecho/ttyecho"]
-    tty <- firstTty
-    cmd (Cwd "ttyecho") "sudo -- ./ttyecho -n" [tty] "reload"
 
 
 
@@ -96,21 +87,31 @@ installFirmware half = do
 
 
 
-firstTty :: Action String
-firstTty = do
-    let pat = "ttyACM*"
-    Stdout ttys <- cmd "find /dev" ["-name", pat]
-    case lines ttys of
-        []    -> fail ("No tty found with " <> pat)
-        [tty] -> pure tty
-        _else -> fail ("More than one " <> pat <> " found:\n" <> ttys)
+-- primeController :: Action ()
+-- primeController = do
+--     need ["ttyecho/ttyecho"]
+--     tty <- firstTty
+--     cmd (Cwd "ttyecho") "sudo -- ./ttyecho -n" [tty] "reload"
+
+
+
+-- firstTty :: Action String
+-- firstTty = do
+--     let pat = "ttyACM*"
+--     Stdout ttys <- cmd "find /dev" ["-name", pat]
+--     case lines ttys of
+--         []    -> fail ("No tty found with " <> pat)
+--         [tty] -> pure tty
+--         _else -> fail ("More than one " <> pat <> " found:\n" <> ttys)
 
 
 
 clean :: Rules ()
 clean = phony "clean" (do
-    cmd (Cwd "controller") "git clean -df" // ()
-    cmd (Cwd "controller/kll") "git clean -df" )
+    cmd (Cwd "controller") (Traced "cleaning controller/")
+        "git clean -df" // ()
+    cmd (Cwd "controller/kll") (Traced "cleaning controller/kll/")
+        "git clean -df" )
 
 
 
@@ -124,5 +125,5 @@ infix 1 //
 main :: IO ()
 main = shakeArgs options rules
   where
-    rules = mconcat [leftHalf, rightHalf, ttyecho, buildFirmware, qdox, clean]
+    rules = mconcat [leftHalf, rightHalf, ttyecho, buildFirmware, qdox, clean, kllDir]
     options = shakeOptions
