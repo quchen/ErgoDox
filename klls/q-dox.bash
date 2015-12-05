@@ -3,12 +3,6 @@
 
 
 
-ScanModule="MDErgo1"
-MacroModule="PartialMap"
-OutputModule="pjrcUSB"
-DebugModule="full"
-Chip="mk20dx256vlh7"
-Compiler="gcc"
 if [ ! -f cmake.bash ]; then
     echo "ERROR: Cannot find 'cmake.bash'"
     exit 1

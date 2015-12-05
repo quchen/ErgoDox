@@ -41,9 +41,15 @@ buildFirmware = loadFirmwareElfs &%> \_ -> do
     baseKlls <- getDirectoryFiles "" ["controller/Scan/MDErgo1/q-*.kll"]
     customKlls <- getDirectoryFiles "" ["controller/kll/layouts/q-*.kll"]
     need (baseKlls <> customKlls)
-    cmd (Cwd "controller/Keyboards") "./q-dox.bash"
+    cmd (Cwd "controller/Keyboards") env "./q-dox.bash"
   where
     loadFirmwareElfs = map loaderElf [L,R]
+    env = [ AddEnv "ScanModule"  "MDErgo1"
+          , AddEnv "MacroModule" "PartialMap"
+          , AddEnv "OutputModule""pjrcUSB"
+          , AddEnv "DebugModule" "full"
+          , AddEnv "Chip"        "mk20dx256vlh7"
+          , AddEnv "Compiler"    "gcc" ]
 
 
 
