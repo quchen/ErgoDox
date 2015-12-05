@@ -16,7 +16,7 @@ import Data.Foldable
 import Config ( BaseMap(..), Chip(..), Compiler(..), DebugModule(..)
               , DefaultMap(..), Layer(..), MacroModule(..), OutputModule(..)
               , PartialMaps(..), ScanModule(..) )
-import qualified Config as Config
+import qualified Config as Cfg
 
 
 
@@ -45,51 +45,29 @@ buildPath = \case
 
 
 buildLoader :: Half -> Rules ()
-buildLoader half = loaderElf half %> \_ -> do
-    moveKlls
-
-    cmd (Cwd "controller/Keyboards")
-        (Traced "Creating build output dir")
-        "mkdir -p" [buildPath half] // ()
-    cmd (Cwd ("controller/Keyboards" </> buildPath half))
-        (Traced ("Building " <> pprHalf half <> " half"))
-        "cmake"
-        ("-DCHIP="         <> let Chip         x = Config.chip         in x)
-        ("-DCOMPILER="     <> let Compiler     x = Config.compiler     in x)
-        ("-DScanModule="   <> let ScanModule   x = Config.scanModule   in x)
-        ("-DMacroModule="  <> let MacroModule  x = Config.macroModule  in x)
-        ("-DOutputModule=" <> let OutputModule x = Config.outputModule in x)
-        ("-DDebugModule="  <> let DebugModule  x = Config.debugModule  in x)
-        ("-DBaseMap="      <> let BaseMap x = Config.baseMap
-                              in intercalate " " x )
-        ("-DDefaultMap="   <> let DefaultMap x = Config.defaultMap
-                              in intercalate " " x )
-        ("-DPartialMaps="  <> let PartialMaps partialMaps = Config.partialMaps
-                                  layers = [ intercalate " " layer | Layer layer <- partialMaps]
-                              in intercalate ";" layers )
-        "../.."
-
+buildLoader half = loaderElf half %> (\_ -> moveKlls >> build)
   where
-
     -- Move .kll files to their appropriate target folder so the compilation
     -- script has them in the right locations
-    moveKlls = do
-        let BaseMap baseMap = Config.baseMap
+    moveKlls = moveBaseMap >> moveDefaultMap >> moveLayers
+
+    moveBaseMap = do
+        let BaseMap baseMap = Cfg.baseMap
         for_ baseMap (\kll ->
             let kllFile = kll <.> "kll"
                 src = "klls" </> kllFile
                 dest = "controller/Scan/MDErgo1" </> kllFile
             in copyFileChanged src dest )
-
-        let DefaultMap defaultMap = Config.defaultMap
+    moveDefaultMap = do
+        let DefaultMap defaultMap = Cfg.defaultMap
         need ["controller/kll"]
         for_ defaultMap (\kll ->
             let kllFile = kll <.> "kll"
                 src = "klls" </> kllFile
                 dest = "controller/kll/layouts" </> kllFile
             in copyFileChanged src dest )
-
-        let PartialMaps layers = Config.partialMaps
+    moveLayers = do
+        let PartialMaps layers = Cfg.partialMaps
         need ["controller/kll"]
         for_ layers (\(Layer layer) ->
             for_ layer (\kll ->
@@ -97,6 +75,32 @@ buildLoader half = loaderElf half %> \_ -> do
                     src = "klls" </> kllFile
                     dest = "controller/kll/layouts" </> kllFile
                 in copyFileChanged src dest ))
+
+    build = do
+        cmd (Cwd "controller/Keyboards")
+            (Traced "Creating build output dir")
+            "mkdir -p" [buildPath half] // ()
+        cmd (Cwd ("controller/Keyboards" </> buildPath half))
+            (Traced ("Generating " <> pprHalf half <> " makefile"))
+            "cmake"
+            ("-DCHIP="         <> let Chip         x = Cfg.chip         in x)
+            ("-DCOMPILER="     <> let Compiler     x = Cfg.compiler     in x)
+            ("-DScanModule="   <> let ScanModule   x = Cfg.scanModule   in x)
+            ("-DMacroModule="  <> let MacroModule  x = Cfg.macroModule  in x)
+            ("-DOutputModule=" <> let OutputModule x = Cfg.outputModule in x)
+            ("-DDebugModule="  <> let DebugModule  x = Cfg.debugModule  in x)
+            ("-DBaseMap="      <> let BaseMap x = Cfg.baseMap
+                                  in intercalate " " x )
+            ("-DDefaultMap="   <> let DefaultMap x = Cfg.defaultMap
+                                  in intercalate " " x )
+            ("-DPartialMaps="  <> let PartialMaps pms = Cfg.partialMaps
+                                      layers = [ intercalate " " layer
+                                               | Layer layer <- pms]
+                                  in intercalate ";" layers )
+            "../.." // ()
+        cmd (Cwd ("controller/Keyboards" </> buildPath half))
+            (Traced ("Compiling " <> pprHalf half <> " half"))
+            "make"
 
 
 
@@ -108,9 +112,9 @@ kllDir = "controller/kll" %> \_ ->
 
 
 
-ttyecho :: Rules ()
-ttyecho = "ttyecho/ttyecho" %> \out ->
-    cmd (Cwd (takeDirectory out)) "make ttyecho"
+-- ttyecho :: Rules ()
+-- ttyecho = "ttyecho/ttyecho" %> \out ->
+--     cmd (Cwd (takeDirectory out)) "make ttyecho"
 
 
 
@@ -170,5 +174,8 @@ infix 1 //
 main :: IO ()
 main = shakeArgs options rules
   where
-    rules = mconcat [leftHalf, rightHalf, ttyecho, buildLoader L, buildLoader R, clean, kllDir]
+    rules = mconcat [leftHalf, rightHalf, buildLoader L, buildLoader R, clean, kllDir]
     options = shakeOptions
+        { shakeStaunch = True -- Build as much as possible
+        , shakeThreads = 0    -- 0 = num cpus
+        }

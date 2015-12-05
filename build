@@ -16,6 +16,6 @@ cabal exec runghc -- \
     -rtsopts -with-rtsopts=-I0 \
     -XLambdaCase \
     Build.hs \
-    --colour --jobs=0 \
+    --colour \
     "$@"
 
