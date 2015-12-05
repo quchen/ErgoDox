@@ -26,13 +26,6 @@ pprHalf = \case
     L -> "left"
     R -> "right"
 
--- leftHalf, rightHalf :: Flash -> Rules ()
--- [leftHalf, rightHalf] = map makePhony [L,R]
---   where
---     makePhony half = \flash -> phony (pprHalf half) (do
---         need [loaderElf half]
---         installFirmware half flash
---         )
 
 
 leftHalf :: Flash -> Rules ()
@@ -47,6 +40,8 @@ phonyForHalf half flash = phony (pprHalf half) (do
     installFirmware half flash
     )
 
+
+
 loaderElf :: Half -> FilePath
 loaderElf half = "controller" </> "Keyboards" </> buildPath half </> "load"
 
@@ -54,6 +49,7 @@ buildPath :: Half -> FilePath
 buildPath = \case
     L -> "ergodox-left"
     R -> "ergodox-right"
+
 
 
 buildLoader :: Half -> Rules ()
