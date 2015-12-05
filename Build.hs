@@ -46,23 +46,25 @@ phonyForHalf half flash = phony (pprHalf half) (do
 
 
 
+-- | Path to the loader executable. Running this will flash the keyboard.
 loaderElf :: Half -> FilePath
-loaderElf half = "controller" </> "Keyboards" </> buildPath half </> "load"
+loaderElf half = buildPath half </> "load"
 
 buildPath :: Half -> FilePath
-buildPath = \case
+buildPath half = "controller/build" </> case half of
     L -> "ergodox-left"
     R -> "ergodox-right"
 
 
 
+-- | Compile the firmware into an executable. Running it while a primed
+-- keyboard is connected will then flash it.
 buildLoader :: Half -> Rules ()
 buildLoader half = loaderElf half %> (\_ -> do
     moveKlls half
-    cmd (Cwd "controller/Keyboards")
-        (Traced "Creating build output dir")
+    cmd (Traced "Creating build output dir")
         "mkdir -p" [buildPath half] // ()
-    cmd (Cwd ("controller/Keyboards" </> buildPath half))
+    cmd (Cwd (buildPath half))
         (Traced ("Generating " <> pprHalf half <> " makefile"))
         "cmake"
         ["-DCHIP="         <> let Chip         x = Cfg.chip         in x]
@@ -80,7 +82,7 @@ buildLoader half = loaderElf half %> (\_ -> do
                                            | Layer layer <- pms]
                               in intercalate ";" layers ]
         "../.." // ()
-    cmd (Cwd ("controller/Keyboards" </> buildPath half))
+    cmd (Cwd (buildPath half))
         (Traced ("Compiling " <> pprHalf half <> " half"))
         "make" )
 
@@ -88,7 +90,7 @@ buildLoader half = loaderElf half %> (\_ -> do
 -- | Move .kll files to their appropriate target folder so the compilation
 -- script has them in the right locations
 moveKlls :: Half -> Action ()
-moveKlls half = moveBaseMap >> moveDefaultMap >> moveLayers
+moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
   where
     moveBaseMap = do
         let BaseMap baseMap = Cfg.baseMap half
@@ -123,20 +125,6 @@ kllDir = "controller/kll" %> \_ ->
 
 
 
--- ttyecho :: Rules ()
--- ttyecho = "ttyecho/ttyecho" %> \out ->
---     cmd (Cwd (takeDirectory out)) "make ttyecho"
-
-
-
--- ensureSudo :: Action ()
--- ensureSudo = getEnv "EUID" >>= \case
---     -- Nothing                 -> fail "EUID not set"
---     -- Just euid | euid /= "0" -> fail "Script must be run as root"
---     _else                   -> pure ()
-
-
-
 installFirmware :: Half -> Flash -> Action ()
 installFirmware _ NoFlash = putNormal "Flashing skipped (enable with --flash)"
 installFirmware half FlashAfterBuild = do
@@ -155,7 +143,15 @@ installFirmware half FlashAfterBuild = do
 --     tty <- firstTty
 --     cmd (Cwd "ttyecho") "sudo -- ./ttyecho -n" [tty] "reload"
 
+-- ttyecho :: Rules ()
+-- ttyecho = "ttyecho/ttyecho" %> \out ->
+--     cmd (Cwd (takeDirectory out)) "make ttyecho"
 
+-- ensureSudo :: Action ()
+-- ensureSudo = getEnv "EUID" >>= \case
+--     -- Nothing                 -> fail "EUID not set"
+--     -- Just euid | euid /= "0" -> fail "Script must be run as root"
+--     _else                   -> pure ()
 
 -- firstTty :: Action String
 -- firstTty = do
