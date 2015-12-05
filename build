@@ -15,7 +15,7 @@ if [[ ! -e .cabal-sandbox ]]; then
         &
     jobs+=" $!"
 fi
-if [[ ! -d controller/.git ]]; then
+if [[ ! -e controller/.git ]]; then
     echo "Firmware directory not found. Updating submodules."
     git submodule init
     git submodule update &

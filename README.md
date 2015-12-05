@@ -12,7 +12,7 @@ Usage
 2. Install current GHC+Cabal for running Haskell
 3. Edit layouts in `klls/` and configure `Config.hs`
 4. Run `./build (left|right)` (first time installs stuff so it takes longer)
-5. Flash by running `controller/Keyboards/ergodox-(left|right)/load` as root
+    - Built with `--flash` to flash the keyboard after building
 
 Directory contents
 ------------------
