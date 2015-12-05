@@ -22,8 +22,8 @@ rightHalf = phony "right" (buildHalf R)
 
 loaderElf :: Half -> FilePath
 loaderElf = \case
-    L -> "controller/Keyboards/quchen-left/load"
-    R -> "controller/Keyboards/quchen-right/load"
+    L -> "controller/Keyboards/ergodox-left/load"
+    R -> "controller/Keyboards/ergodox-right/load"
 
 
 

@@ -18,7 +18,7 @@ fi
 
 # Left half primary
 
-BuildPath="quchen-left"
+BuildPath="ergodox-left"
 # BaseMap="defaultMap leftHand slave1 rightHand"
 BaseMap="q-base-left q-flash-remote q-flash q-switch-to-slave-1 q-flash q-base-right"
 DefaultMap="lcdFuncMap"
@@ -39,6 +39,6 @@ source cmake.bash
 
 # Right half primary
 
-BuildPath="quchen-right"
+BuildPath="ergodox-right"
 BaseMap="q-base-right q-flash-remote q-flash q-switch-to-slave-1 q-flash q-base-left"
 source cmake.bash
