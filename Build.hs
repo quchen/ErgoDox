@@ -107,8 +107,15 @@ firstTty = do
 
 
 
+clean :: Rules ()
+clean = phony "clean" (do
+    cmd (Cwd "controller") "git clean -df"
+    cmd (Cwd "controller/kll") "git clean -df" )
+
+
+
 main :: IO ()
 main = shakeArgs options rules
   where
-    rules = mconcat [leftHalf, rightHalf, ttyecho, buildFirmware, qdox]
+    rules = mconcat [leftHalf, rightHalf, ttyecho, buildFirmware, qdox, clean]
     options = shakeOptions
