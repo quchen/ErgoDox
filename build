@@ -2,10 +2,28 @@
 
 set -euo pipefail
 
+numCpus="$(grep -c "^processor" /proc/cpuinfo)"
+jobs=""
 if [[ ! -e .cabal-sandbox ]]; then
+    echo "No cabal sandbox found. Installing Shake."
     cabal sandbox init
-    cabal install shake
+    cabal install shake \
+        -j$numCpus \
+        --ghc-options=-j$numCpus \
+        --disable-profiling \
+        --disable-executable-profiling \
+        &
+    jobs+=" $!"
 fi
+if [[ ! -d controller/.git ]]; then
+    echo "Firmware directory not found. Updating submodules."
+    git submodule init
+    git submodule update &
+    jobs+=" $!"
+fi
+for job in $jobs; do
+    wait "$job"
+done
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
