@@ -29,12 +29,12 @@ module Config (
 
 baseMap :: BaseMap
 baseMap = BaseMap
-    [ "q-base-left"
-    , "q-flash-remote"
-    , "q-flash"
-    , "q-switch-to-slave-1"
-    , "q-flash"
-    , "q-base-right" ]
+    [ "base-left"
+    , "flash-remote"
+    , "flash"
+    , "switch-to-slave-1"
+    , "flash"
+    , "base-right" ]
 
 defaultMap :: DefaultMap
 defaultMap = DefaultMap
@@ -43,9 +43,9 @@ defaultMap = DefaultMap
 partialMaps :: PartialMaps
 partialMaps = PartialMaps [layer1, layer2, layer3]
   where
-    layer1 = Layer ["q-layer-1"]
-    layer2 = Layer ["q-layer-2"]
-    layer3 = Layer ["q-arrow-keys"]
+    layer1 = Layer ["layer-1"]
+    layer2 = Layer ["layer-2"]
+    layer3 = Layer ["arrow-keys"]
 
 
 
