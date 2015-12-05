@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
+if [[ ! -e .cabal-sandbox ]]; then
+    cabal sandbox init
+    cabal install shake
+fi
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
   SELFDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
