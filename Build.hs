@@ -48,21 +48,23 @@ phonyForHalf half flash = phony (pprHalf half) (do
 
 
 
+-- | The root directory for all output of this script.
 buildPath :: FilePath
 buildPath = ".build"
 
+-- | Root directory for each Ergodox half.
 buildPathFor :: Half -> FilePath
 buildPathFor half = buildPath </> case half of
     L -> "ergodox-left"
     R -> "ergodox-right"
 
+-- | Location of the file for each half.
 firmwareFile :: Half -> FilePath
 firmwareFile half = buildPathFor half </> "kiibohd.dfu.bin"
 
 
 
--- | Compile the firmware into an executable. Running it while a primed
--- keyboard is connected will then flash it.
+-- | Compile the firmware a .bin file that can be sent to the keyboard.
 buildFirmware :: Half -> Rules ()
 buildFirmware half = firmwareFile half %> (\_ -> do
     moveKlls half
@@ -95,7 +97,7 @@ buildFirmware half = firmwareFile half %> (\_ -> do
 
 
 -- | Move .kll files to their appropriate target folder so the compilation
--- script has them in the right locations
+-- script has them in the right locations.
 moveKlls :: Half -> Action ()
 moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
   where
@@ -124,6 +126,11 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
                     dest = "controller/kll/layouts" </> kllFile
                 in copyFileChanged src dest ))
 
+
+
+-- | For some reason, the build system does not have the "kll" repo as a
+-- submodule. This rule ensures an initial dummy build is done, during which
+-- the "controller" repo sets itself up correctly.
 initializeKllDir :: Rules ()
 initializeKllDir = "controller/kll" %> \_ -> do
     let dummyPath = buildPath </> "dummy"
@@ -136,6 +143,8 @@ initializeKllDir = "controller/kll" %> \_ -> do
 
 
 
+-- | Send generated .bin firmware to the keyboard. Requires it to be in
+-- flashing state.
 installFirmware :: Half -> Flash -> Action ()
 installFirmware _ NoFlash = putNormal "Flashing skipped (enable with --flash)"
 installFirmware half FlashAfterBuild = do
@@ -155,6 +164,8 @@ installFirmware half FlashAfterBuild = do
 
 
 
+-- | Remove all build files by this script and the wrapped "controller" build
+-- system.
 clean :: Rules ()
 clean = phony "clean" (do
     removeFilesAfter ".build" ["//*"]
@@ -180,7 +191,7 @@ data Flash = FlashAfterBuild | NoFlash
 
 
 
-data Flags = FlashFlag
+data Flags = FlashFlag -- ^ Send firmware to the keyboard after building?
     deriving Eq
 
 flagSpecs :: [OptDescr (Either a Flags)]
@@ -204,6 +215,3 @@ main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
     aux         = initializeKllDir
 
     options = shakeOptions
-        { shakeStaunch = True -- Build as much as possible
-        , shakeThreads = 0    -- 0 = num cpus
-        }
