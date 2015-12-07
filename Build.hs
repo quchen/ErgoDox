@@ -40,15 +40,14 @@ rightHalf = phonyForHalf R
 
 phonyForHalf :: Half -> Flash -> Rules ()
 phonyForHalf half flash = phony (pprHalf half) (do
-    need [loaderElf half]
+    need [firmwareFile half]
     installFirmware half flash
     )
 
 
 
--- | Path to the loader executable. Running this will flash the keyboard.
-loaderElf :: Half -> FilePath
-loaderElf half = buildPath half </> "load"
+firmwareFile :: Half -> FilePath
+firmwareFile half = buildPath half </> "kiibohd.dfu.bin"
 
 buildPath :: Half -> FilePath
 buildPath half = "controller/build" </> case half of
@@ -59,8 +58,8 @@ buildPath half = "controller/build" </> case half of
 
 -- | Compile the firmware into an executable. Running it while a primed
 -- keyboard is connected will then flash it.
-buildLoader :: Half -> Rules ()
-buildLoader half = loaderElf half %> (\_ -> do
+buildFirmware :: Half -> Rules ()
+buildFirmware half = firmwareFile half %> (\_ -> do
     moveKlls half
     cmd (Traced "Creating build output dir")
         "mkdir -p" [buildPath half] // ()
@@ -117,8 +116,8 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
                     dest = "controller/kll/layouts" </> kllFile
                 in copyFileChanged src dest ))
 
-kllDir :: Rules ()
-kllDir = "controller/kll" %> \_ ->
+initializeKllDir :: Rules ()
+initializeKllDir = "controller/kll" %> \_ ->
     cmd (Cwd "controller/Keyboards")
         (Traced "Dummy build for initialization of kll subdir")
         "./template.bash"
@@ -128,49 +127,50 @@ kllDir = "controller/kll" %> \_ ->
 installFirmware :: Half -> Flash -> Action ()
 installFirmware _ NoFlash = putNormal "Flashing skipped (enable with --flash)"
 installFirmware half FlashAfterBuild = do
-    need [loaderElf half]
-    -- primeController
-    let (wd, elf) = splitFileName (loaderElf half)
+    need [firmwareFile half]
+    primeController
+    let (wd, firmware) = splitFileName (firmwareFile half)
     cmd (Cwd wd) (Traced "Flashing")
-        ("sudo ./" <> elf)
+        "sudo dfu-util"
+        ["--download", firmware] // ()
+    let waitSeconds = "2"
+    cmd (Traced ("Waiting " <> waitSeconds <> " for microcontroller"))
+        "sleep" [waitSeconds]
 
+primeController :: Action ()
+primeController = do
+    ensureSudo
+    tty <- firstTty
+    cmd (Traced "Priming keyboard")
+        "sudo bash -c"
+        ["printf \"reload\r\" > " <> tty]
 
+ensureSudo :: Action ()
+ensureSudo = getEnv "EUID" >>= \case
+    Just "0"   -> pure ()
+    Just _not0 -> fail "Must be root to run with --flash"
+    Nothing    -> fail "EUID not set"
 
--- primeController :: Action ()
--- primeController = do
---     need ["ttyecho/ttyecho"]
---     ensureSudo
---     tty <- firstTty
---     cmd (Cwd "ttyecho") "sudo -- ./ttyecho -n" [tty] "reload"
-
--- ttyecho :: Rules ()
--- ttyecho = "ttyecho/ttyecho" %> \out ->
---     cmd (Cwd (takeDirectory out)) "make ttyecho"
-
--- ensureSudo :: Action ()
--- ensureSudo = getEnv "EUID" >>= \case
---     -- Nothing                 -> fail "EUID not set"
---     -- Just euid | euid /= "0" -> fail "Script must be run as root"
---     _else                   -> pure ()
-
--- firstTty :: Action String
--- firstTty = do
---     let pat = "ttyACM*"
---     Stdout ttys <- cmd "find /dev" ["-name", pat]
---     case lines ttys of
---         []    -> fail ("No tty found with " <> pat)
---         [tty] -> pure tty
---         _else -> fail ("More than one " <> pat <> " found:\n" <> ttys)
+firstTty :: Action String
+firstTty = do
+    let pat = "ttyACM*"
+    (Exit _, Stdout ttys, Stderr ()) <- cmd "find /dev" ["-name", pat]
+    case lines ttys of
+        []    -> fail ("No suitable tty found for pattern " <> pat)
+        [tty] -> pure tty
+        _else -> fail ("More than one " <> pat <> " found:\n" <> ttys)
 
 
 
 clean :: Rules ()
 clean = phony "clean" (do
-    cmd (Cwd "controller") (Traced "git clean controller")
-        "git clean -df" // ()
-    cmd (Cwd "controller/kll") (Traced "git clean controller/kll")
-        "git clean -df" // ()
-    )
+    gitClean "controller"
+    gitClean "controller/kll" )
+  where
+    gitClean :: FilePath -> Action ()
+    gitClean dir =
+        cmd (Cwd dir) (Traced ("git clean " <> dir))
+            "git clean -df"
 
 
 
@@ -204,7 +204,11 @@ main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
                 | otherwise = want targets >> withoutActions rules'
     in rules'' )))
   where
-    rules flash = mconcat [leftHalf flash, rightHalf flash, buildLoader L, buildLoader R, clean, kllDir]
+    rules flash = mconcat [halves flash, firmware, clean, aux]
+    halves      = leftHalf <> rightHalf
+    firmware    = buildFirmware L <> buildFirmware R
+    aux         = initializeKllDir
+
     options = shakeOptions
         { shakeStaunch = True -- Build as much as possible
         , shakeThreads = 0    -- 0 = num cpus

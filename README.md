@@ -12,7 +12,7 @@ Usage
 2. Install current GHC+Cabal for running Haskell
 3. Edit layouts in `klls/` and configure `Config.hs`
 4. Run `./build (left|right)` (first time installs stuff so it takes longer)
-    - Built with `--flash` to flash the keyboard after building
+    - Build with `--flash` to flash the keyboard after building
 
 Directory contents
 ------------------
