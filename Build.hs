@@ -13,6 +13,7 @@ import Data.Foldable
 import Data.List (intercalate)
 import Data.Monoid
 import System.Console.GetOpt
+import System.Directory
 
 import Development.Shake hiding (addPath)
 import Development.Shake.FilePath
@@ -46,16 +47,16 @@ phonyForHalf half flash = phony (pprHalf half) (do
 
 
 
-firmwareFile :: Half -> FilePath
-firmwareFile half = buildPathFor half </> "kiibohd.dfu.bin"
-
 buildPath :: FilePath
-buildPath = "controller/build"
+buildPath = ".build"
 
 buildPathFor :: Half -> FilePath
 buildPathFor half = buildPath </> case half of
     L -> "ergodox-left"
     R -> "ergodox-right"
+
+firmwareFile :: Half -> FilePath
+firmwareFile half = buildPathFor half </> "kiibohd.dfu.bin"
 
 
 
@@ -66,6 +67,9 @@ buildFirmware half = firmwareFile half %> (\_ -> do
     moveKlls half
     cmd (Traced "Creating firmware output dir")
         "mkdir -p" [buildPathFor half] // ()
+    cmakeLists <- liftIO (do
+        pwd <- makeAbsolute =<< getCurrentDirectory
+        pure (pwd </> "controller") )
     cmd (Cwd (buildPathFor half))
         (Traced ("Generating " <> pprHalf half <> " makefile"))
         "cmake"
@@ -83,7 +87,7 @@ buildFirmware half = firmwareFile half %> (\_ -> do
                                   layers = [ intercalate " " layer
                                            | Layer layer <- pms]
                               in intercalate ";" layers ]
-        "../.." // ()
+        [cmakeLists] // ()
     cmd (Cwd (buildPathFor half))
         (Traced ("Compiling " <> pprHalf half <> " half"))
         "make" )
@@ -171,6 +175,7 @@ firstTty = do
 
 clean :: Rules ()
 clean = phony "clean" (do
+    removeFilesAfter ".build" ["//*"]
     gitClean "controller"
     gitClean "controller/kll" )
   where
