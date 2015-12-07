@@ -47,10 +47,13 @@ phonyForHalf half flash = phony (pprHalf half) (do
 
 
 firmwareFile :: Half -> FilePath
-firmwareFile half = buildPath half </> "kiibohd.dfu.bin"
+firmwareFile half = buildPathFor half </> "kiibohd.dfu.bin"
 
-buildPath :: Half -> FilePath
-buildPath half = "controller/build" </> case half of
+buildPath :: FilePath
+buildPath = "controller/build"
+
+buildPathFor :: Half -> FilePath
+buildPathFor half = buildPath </> case half of
     L -> "ergodox-left"
     R -> "ergodox-right"
 
@@ -61,9 +64,9 @@ buildPath half = "controller/build" </> case half of
 buildFirmware :: Half -> Rules ()
 buildFirmware half = firmwareFile half %> (\_ -> do
     moveKlls half
-    cmd (Traced "Creating build output dir")
-        "mkdir -p" [buildPath half] // ()
-    cmd (Cwd (buildPath half))
+    cmd (Traced "Creating firmware output dir")
+        "mkdir -p" [buildPathFor half] // ()
+    cmd (Cwd (buildPathFor half))
         (Traced ("Generating " <> pprHalf half <> " makefile"))
         "cmake"
         ["-DCHIP="         <> let Chip         x = Cfg.chip         in x]
@@ -81,7 +84,7 @@ buildFirmware half = firmwareFile half %> (\_ -> do
                                            | Layer layer <- pms]
                               in intercalate ";" layers ]
         "../.." // ()
-    cmd (Cwd (buildPath half))
+    cmd (Cwd (buildPathFor half))
         (Traced ("Compiling " <> pprHalf half <> " half"))
         "make" )
 
@@ -117,10 +120,14 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
                 in copyFileChanged src dest ))
 
 initializeKllDir :: Rules ()
-initializeKllDir = "controller/kll" %> \_ ->
-    cmd (Cwd "controller/Keyboards")
-        (Traced "Dummy build for initialization of kll subdir")
-        "./template.bash"
+initializeKllDir = "controller/kll" %> \_ -> do
+    let dummyPath = buildPath </> "dummy"
+    cmd (Traced "Creating dummy output dir")
+        "mkdir -p" [dummyPath] // ()
+    cmd (Cwd dummyPath) (Traced "Preparing initial dummy build")
+        "cmake ../.." // ()
+    cmd (Cwd dummyPath) (Traced "Running dummy build")
+        "make" // ()
 
 
 
