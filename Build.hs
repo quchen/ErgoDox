@@ -131,7 +131,7 @@ initializeKllDir = "controller/kll" %> \_ -> do
     cmd (Cwd dummyPath) (Traced "Preparing initial dummy build")
         "cmake ../.." // ()
     cmd (Cwd dummyPath) (Traced "Running dummy build")
-        "make" // ()
+        "make"
 
 
 
@@ -142,25 +142,24 @@ installFirmware half FlashAfterBuild = do
     primeController
     let (wd, firmware) = splitFileName (firmwareFile half)
     cmd (Cwd wd) (Traced "Flashing")
-        "sudo dfu-util"
+        "sudo"
+        ["-p", "Root privileges needed to flash microcontroller. Password: "]
+        "--"
+        "dfu-util"
         ["--download", firmware]
 
 primeController :: Action ()
 primeController = do
-    ensureSudo
     tty <- firstTty
     cmd (Traced "Priming keyboard")
-        "sudo bash -c"
+        "sudo"
+        ["-p", "Root privileges needed to prime microcontroller. Password: "]
+        "--"
+        "bash -c"
         ["printf \"reload\r\" > " <> tty] // ()
     let waitSeconds = "2"
     cmd (Traced ("Waiting " <> waitSeconds <> " for microcontroller"))
         "sleep" [waitSeconds]
-
-ensureSudo :: Action ()
-ensureSudo = getEnv "EUID" >>= \case
-    Just "0"   -> pure ()
-    Just _not0 -> fail "Must be root to run with --flash"
-    Nothing    -> fail "EUID not set"
 
 firstTty :: Action String
 firstTty = do
