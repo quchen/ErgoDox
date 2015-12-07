@@ -132,10 +132,7 @@ installFirmware half FlashAfterBuild = do
     let (wd, firmware) = splitFileName (firmwareFile half)
     cmd (Cwd wd) (Traced "Flashing")
         "sudo dfu-util"
-        ["--download", firmware] // ()
-    let waitSeconds = "2"
-    cmd (Traced ("Waiting " <> waitSeconds <> " for microcontroller"))
-        "sleep" [waitSeconds]
+        ["--download", firmware]
 
 primeController :: Action ()
 primeController = do
@@ -143,7 +140,10 @@ primeController = do
     tty <- firstTty
     cmd (Traced "Priming keyboard")
         "sudo bash -c"
-        ["printf \"reload\r\" > " <> tty]
+        ["printf \"reload\r\" > " <> tty] // ()
+    let waitSeconds = "2"
+    cmd (Traced ("Waiting " <> waitSeconds <> " for microcontroller"))
+        "sleep" [waitSeconds]
 
 ensureSudo :: Action ()
 ensureSudo = getEnv "EUID" >>= \case
@@ -191,7 +191,7 @@ data Flags = FlashFlag
 
 flagSpecs :: [OptDescr (Either a Flags)]
 flagSpecs =
-    [Option "" ["flash"] (NoArg (Right FlashFlag)) "Flash after compilation"]
+    [Option "" ["flash"] (NoArg (Right FlashFlag)) "Flash keyboard"]
 
 
 
