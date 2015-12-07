@@ -10,10 +10,11 @@ module Build (main) where
 
 
 import Data.Foldable
-import Data.List (intercalate)
+import Data.List (intercalate, isInfixOf)
 import Data.Monoid
 import System.Console.GetOpt
 import System.Directory
+import System.Exit
 
 import Development.Shake hiding (addPath)
 import Development.Shake.FilePath
@@ -139,36 +140,18 @@ installFirmware :: Half -> Flash -> Action ()
 installFirmware _ NoFlash = putNormal "Flashing skipped (enable with --flash)"
 installFirmware half FlashAfterBuild = do
     need [firmwareFile half]
-    primeController
     let (wd, firmware) = splitFileName (firmwareFile half)
-    cmd (Cwd wd) (Traced "Flashing")
+    (Exit e, Stderr stderr) <- cmd (Cwd wd) (Traced "Flashing")
         "sudo"
-        ["-p", "Root privileges needed to flash microcontroller. Password: "]
+        ["-p", "Root privileges needed to flash uC. Password: "]
         "--"
         "dfu-util"
         ["--download", firmware]
-
-primeController :: Action ()
-primeController = do
-    tty <- firstTty
-    cmd (Traced "Priming keyboard")
-        "sudo"
-        ["-p", "Root privileges needed to prime microcontroller. Password: "]
-        "--"
-        "bash -c"
-        ["printf \"reload\r\" > " <> tty] // ()
-    let waitSeconds = "2"
-    cmd (Traced ("Waiting " <> waitSeconds <> " for microcontroller"))
-        "sleep" [waitSeconds]
-
-firstTty :: Action String
-firstTty = do
-    let pat = "ttyACM*"
-    (Exit _, Stdout ttys, Stderr ()) <- cmd "find /dev" ["-name", pat]
-    case lines ttys of
-        []    -> fail ("No suitable tty found for pattern " <> pat)
-        [tty] -> pure tty
-        _else -> fail ("More than one " <> pat <> " found:\n" <> ttys)
+    case e of
+        ExitSuccess -> pure ()
+        ExitFailure _e | "No DFU capable USB device available" `isInfixOf` stderr
+            -> fail "No keyboard in flash mode found"
+        _else -> fail "dlflfdj"
 
 
 
