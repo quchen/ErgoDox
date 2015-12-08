@@ -189,8 +189,6 @@ infix 1 //
 -- | Should the keyboard be automatically flashed after building finishes?
 data Flash = FlashAfterBuild | NoFlash
 
-
-
 data Flags = FlashFlag -- ^ Send firmware to the keyboard after building?
     deriving Eq
 
@@ -202,16 +200,21 @@ flagSpecs =
 
 main :: IO ()
 main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
-    let flashFlag | FlashFlag `elem` flags = FlashAfterBuild
-                  | otherwise              = NoFlash
-        rules' = rules flashFlag
-        rules'' | null targets = rules'
-                | otherwise = want targets >> withoutActions rules'
-    in rules'' )))
+    let rulesFlagged = ruleRecipes (flashFlag flags)
+        rules = handleTargets rulesFlagged targets
+    in rules )))
   where
-    rules flash = mconcat [halves flash, firmware, clean, aux]
-    halves      = leftHalf <> rightHalf
-    firmware    = buildFirmware L <> buildFirmware R
-    aux         = initializeKllDir
+
+    ruleRecipes flash = mconcat [halves flash, firmware, clean, aux]
+      where
+        halves   = leftHalf <> rightHalf
+        firmware = buildFirmware L <> buildFirmware R
+        aux      = initializeKllDir
+
+    handleTargets rules [] = rules
+    handleTargets rules targets = want targets >> withoutActions rules
+
+    flashFlag flags | FlashFlag `elem` flags = FlashAfterBuild
+                    | otherwise              = NoFlash
 
     options = shakeOptions
