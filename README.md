@@ -3,6 +3,8 @@ ErgoDox build system
 
 Fire-and-forget build system for configuring the Infinity Ergodox.
 
+[![Build Status](https://travis-ci.org/quchen/ErgoDox.svg?branch=master)](https://travis-ci.org/quchen/ErgoDox)
+
 
 
 Usage
@@ -14,15 +16,15 @@ Usage
 2. Install current GHC+Cabal for running Haskell
 3. Install prerequisite packages
 
-   ```
-   sudo apt-get install       \
-       cmake                  \
-       ctags                  \
-       libusb-1.0-0-dev       \
-       binutils-arm-none-eabi \
-       gcc-arm-none-eabi      \
-       dfu-util
-   ```
+  ```
+  sudo apt-get install       \
+      cmake                  \
+      ctags                  \
+      libusb-1.0-0-dev       \
+      binutils-arm-none-eabi \
+      gcc-arm-none-eabi      \
+      dfu-util
+  ```
 
 ### Execution
 

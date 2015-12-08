@@ -5,7 +5,7 @@ set -euo pipefail
 numCpus="$(grep -c "^processor" /proc/cpuinfo)"
 jobs=""
 if [[ ! -e .cabal-sandbox ]]; then
-    echo "No cabal sandbox found. Installing Shake."
+    echo "No Cabal sandbox found. Installing Shake."
     cabal sandbox init
     cabal install shake \
         -j$numCpus \
@@ -43,4 +43,3 @@ cabal exec runghc -- \
     Build/Main.hs \
     --colour \
     "$@"
-
