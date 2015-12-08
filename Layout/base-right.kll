@@ -1,4 +1,4 @@
-Name = Quchen right base map;
+Name = Right base map;
 Version = 0.1;
 Author = "quchen (David Luposchainsky) 2015";
 KLL = 0.3c;
@@ -64,7 +64,7 @@ S0x22 : U"Slash";
 S0x23 : U"RShift";
 
 # Bottom row
-S0x28 : U"Left";
+S0x28 : U"Function3";
 S0x29 : U"Down";
 S0x2A : U"Up";
 S0x2B : U"Right";

@@ -38,8 +38,9 @@ defaultMap = DefaultMap
 
 
 partialMaps :: PartialMaps
-partialMaps = PartialMaps [layer1, layer2, layer3]
+partialMaps = PartialMaps [layer1, layer2, layer3, layer4]
   where
     layer1 = Layer ["layer-1"]
     layer2 = Layer ["layer-2"]
     layer3 = Layer ["arrow-keys"]
+    layer4 = Layer ["numpad", "fkeys"]

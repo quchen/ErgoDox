@@ -42,4 +42,4 @@ Directory contents
 - `Build`: Build system files
 - `Layout`: Key layout configuration
 - `build`: Build system entry point
-- `README.hs`: This file
+- `README.md`: This file

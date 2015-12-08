@@ -1,4 +1,4 @@
-Name = Quchen left base map;
+Name = Left base map;
 Version = 0.1;
 Author = "quchen (David Luposchainsky) 2015";
 KLL = 0.3c;
@@ -44,7 +44,7 @@ S0x0F : U"W";
 S0x0E : U"E";
 S0x0D : U"R";
 S0x0C : U"T";
-S0x0B : U"Function1"; # Top 1.5
+S0x0B : U"Tab"; # Top 1.5
 
 # Middle row
 S0x1A : U"Backslash";
@@ -66,14 +66,14 @@ S0x1D : U"Function2"; # Bottom 1.5
 # Bottom row
 S0x2C : U"LCtrl";
 S0x2B : U"Backtick";
-S0x2A : U"Function3";
+S0x2A : U"Function5";
 S0x29 : U"Function4";
-S0x28 : U"Function5";
+S0x28 : U"Function3";
 
 # Thumb cluster
 S0x1C : U"LGui";      # top middle
 S0x1B : U"LAlt";      # top right
 S0x27 : U"Backspace"; # left
 S0x26 : U"Delete";    # middle
-S0x25 : U"End";       # right bottom
+S0x25 : U"Function4"; # right bottom
 S0x24 : U"Home";      # right middle

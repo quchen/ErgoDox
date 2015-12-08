@@ -1,0 +1,19 @@
+Name = Numpad;
+Version = 0.1;
+Author = "quchen (David Luposchainsky) 2015";
+KLL = 0.3c;
+
+# Modified Date
+Date = 2015-12-08;
+
+U"J"      : U"Keypad 1";
+U"K"      : U"Keypad 2";
+U"L"      : U"Keypad 3";
+U"U"      : U"Keypad 4";
+U"I"      : U"Keypad 5";
+U"O"      : U"Keypad 6";
+U"7"      : U"Keypad 7";
+U"8"      : U"Keypad 8";
+U"9"      : U"Keypad 9";
+U"M"      : U"Keypad 0";
+U"Enter"  : U"Keypad Enter";
