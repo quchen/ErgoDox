@@ -14,7 +14,6 @@ env:
 #       important.
 before_install:
  - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
- - travis_retry sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
 
  - travis_retry sudo apt-get update
 

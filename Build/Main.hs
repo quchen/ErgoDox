@@ -180,7 +180,8 @@ installFirmware half FlashAfterBuild = do
 -- system.
 clean :: Rules ()
 clean = phony "clean" (do
-    removeFilesAfter ".build" ["//*"]
+    putNormal ("Deleting own build folder: " <> buildPath)
+    removeFilesAfter buildPath ["//*"]
     putNormal "Cleaning wrapped build systems in controller/"
     gitClean "controller"
     gitClean "controller/kll" )
