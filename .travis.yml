@@ -19,7 +19,7 @@ before_install:
  - travis_retry sudo apt-get update
 
  - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER
- - sudo apt-get install cmake ctags libusb-1.0-0-dev gcc-arm-none-eabi dfu-util
+ - sudo apt-get install cmake ctags libusb-1.0-0-dev binutils-arm-none-eabi gcc-arm-none-eabi dfu-util
 
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
 

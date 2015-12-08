@@ -65,32 +65,25 @@ buildFirmware half = firmwareFile half %> (\out -> do
     -- Move .kll files to their appropriate target folder so the compilation
     -- script has them in the right locations
     moveKlls :: Action ()
-    moveKlls = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
+    moveKlls = moveBaseMap >> moveDefaultMap >> moveLayers
       where
+        moveKll srcDir destDir = \kll ->
+            let kllFile = kll <.> "kll"
+                src = srcDir </> kllFile
+                dest = destDir </> kllFile
+            in copyFileChanged src dest
         moveBaseMap = do
             let BaseMap baseMap = Layout.baseMap half
-            for_ baseMap (\kll ->
-                let kllFile = kll <.> "kll"
-                    src = "Layout" </> kllFile
-                    dest = "controller/Scan/MDErgo1" </> kllFile
-                in copyFileChanged src dest )
+            for_ baseMap (moveKll "Layout" "controller/Scan/MDErgo1")
         moveDefaultMap = do
             let DefaultMap defaultMap = Layout.defaultMap
             need ["controller/kll"]
-            for_ defaultMap (\kll ->
-                let kllFile = kll <.> "kll"
-                    src = "Layout" </> kllFile
-                    dest = "controller/kll/layouts" </> kllFile
-                in copyFileChanged src dest )
+            for_ defaultMap (moveKll "Layout" "controller/kll/layouts")
         moveLayers = do
             let PartialMaps layers = Layout.partialMaps
             need ["controller/kll"]
             for_ layers (\(Layer layer) ->
-                for_ layer (\kll ->
-                    let kllFile = kll <.> "kll"
-                        src = "Layout" </> kllFile
-                        dest = "controller/kll/layouts" </> kllFile
-                    in copyFileChanged src dest ))
+                for_ layer (moveKll "Layout" "controller/kll/layouts") )
 
     createWrappedBuildPath :: Action ()
     createWrappedBuildPath =
