@@ -18,11 +18,8 @@ import System.Exit
 import Development.Shake hiding (addPath)
 import Development.Shake.FilePath
 
-import Config ( BaseMap(..), Chip(..), Compiler(..), DebugModule(..)
-              , DefaultMap(..), Layer(..), MacroModule(..), OutputModule(..)
-              , PartialMaps(..), ScanModule(..)
-              , Half(..) )
-import qualified Config as Cfg
+import Build.Types
+import qualified Layout.Config as Cfg
 
 
 
@@ -104,7 +101,7 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
         let BaseMap baseMap = Cfg.baseMap half
         for_ baseMap (\kll ->
             let kllFile = kll <.> "kll"
-                src = "klls" </> kllFile
+                src = "Layout" </> kllFile
                 dest = "controller/Scan/MDErgo1" </> kllFile
             in copyFileChanged src dest )
     moveDefaultMap = do
@@ -112,7 +109,7 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
         need ["controller/kll"]
         for_ defaultMap (\kll ->
             let kllFile = kll <.> "kll"
-                src = "klls" </> kllFile
+                src = "Layout" </> kllFile
                 dest = "controller/kll/layouts" </> kllFile
             in copyFileChanged src dest )
     moveLayers = do
@@ -121,7 +118,7 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
         for_ layers (\(Layer layer) ->
             for_ layer (\kll ->
                 let kllFile = kll <.> "kll"
-                    src = "klls" </> kllFile
+                    src = "Layout" </> kllFile
                     dest = "controller/kll/layouts" </> kllFile
                 in copyFileChanged src dest ))
 

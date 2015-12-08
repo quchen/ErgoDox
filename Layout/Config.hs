@@ -1,4 +1,4 @@
-module Config (
+module Layout.Config (
     -- * Custom configuration
     baseMap,
     defaultMap,
@@ -10,26 +10,14 @@ module Config (
     outputModule,
     debugModule,
     chip,
-    compiler,
-
-    -- * Type safety newtypes
-    BaseMap(..),
-    Chip(..),
-    Compiler(..),
-    DebugModule(..),
-    DefaultMap(..),
-    Layer(..),
-    MacroModule(..),
-    OutputModule(..),
-    PartialMaps(..),
-    ScanModule(..),
-
-    Half(..)
+    compiler
 ) where
 
 
--- | Should probably go into its own module, but is here for now (tm)
-data Half = L | R
+
+import Build.Types
+
+
 
 -- | Base map parametrized over the primary half. If you get this wrong, the
 -- two sides are mirrored. :-)
@@ -78,13 +66,3 @@ compiler = Compiler "gcc"
 
 
 
-newtype BaseMap      = BaseMap [FilePath]
-newtype Chip         = Chip String
-newtype Compiler     = Compiler FilePath
-newtype DebugModule  = DebugModule FilePath
-newtype DefaultMap   = DefaultMap [FilePath]
-newtype Layer        = Layer [FilePath]
-newtype MacroModule  = MacroModule FilePath
-newtype OutputModule = OutputModule FilePath
-newtype PartialMaps  = PartialMaps [Layer]
-newtype ScanModule   = ScanModule FilePath
