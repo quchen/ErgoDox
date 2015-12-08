@@ -40,7 +40,7 @@ cabal exec runghc -- \
     -Wall \
     -rtsopts -with-rtsopts=-I0 \
     -XLambdaCase \
-    Build.hs \
+    Build/Main.hs \
     --colour \
     "$@"
 

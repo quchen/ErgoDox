@@ -5,7 +5,7 @@
 -- firmware.
 --
 -- Userland configuration is in "Config.hs".
-module Build (main) where
+module Build.Main (main) where
 
 
 
