@@ -19,7 +19,8 @@ import Development.Shake hiding (addPath)
 import Development.Shake.FilePath
 
 import Build.Types
-import qualified Layout.Config as Cfg
+import Build.WrappedBuildSystemConfig as Build
+import qualified Layout.Config as Layout
 
 
 
@@ -27,8 +28,6 @@ pprHalf :: Half -> String
 pprHalf = \case
     L -> "left"
     R -> "right"
-
-
 
 leftHalf :: Flash -> Rules ()
 leftHalf = phonyForHalf L
@@ -70,17 +69,17 @@ buildFirmware half = firmwareFile half %> (\_ -> do
     cmd (Cwd (wrappedBuildPath half))
         (Traced ("Generating " <> pprHalf half <> " makefile"))
         "cmake"
-        ["-DCHIP="         <> let Chip         x = Cfg.chip         in x]
-        ["-DCOMPILER="     <> let Compiler     x = Cfg.compiler     in x]
-        ["-DScanModule="   <> let ScanModule   x = Cfg.scanModule   in x]
-        ["-DMacroModule="  <> let MacroModule  x = Cfg.macroModule  in x]
-        ["-DOutputModule=" <> let OutputModule x = Cfg.outputModule in x]
-        ["-DDebugModule="  <> let DebugModule  x = Cfg.debugModule  in x]
-        ["-DBaseMap="      <> let BaseMap x = Cfg.baseMap half
+        ["-DCHIP="         <> let Chip         x = Build.chip         in x]
+        ["-DCOMPILER="     <> let Compiler     x = Build.compiler     in x]
+        ["-DScanModule="   <> let ScanModule   x = Build.scanModule   in x]
+        ["-DMacroModule="  <> let MacroModule  x = Build.macroModule  in x]
+        ["-DOutputModule=" <> let OutputModule x = Build.outputModule in x]
+        ["-DDebugModule="  <> let DebugModule  x = Build.debugModule  in x]
+        ["-DBaseMap="      <> let BaseMap x = Layout.baseMap half
                               in intercalate " " x ]
-        ["-DDefaultMap="   <> let DefaultMap x = Cfg.defaultMap
+        ["-DDefaultMap="   <> let DefaultMap x = Layout.defaultMap
                               in intercalate " " x ]
-        ["-DPartialMaps="  <> let PartialMaps pms = Cfg.partialMaps
+        ["-DPartialMaps="  <> let PartialMaps pms = Layout.partialMaps
                                   layers = [ intercalate " " layer
                                            | Layer layer <- pms]
                               in intercalate ";" layers ]
@@ -98,14 +97,14 @@ moveKlls :: Half -> Action ()
 moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
   where
     moveBaseMap = do
-        let BaseMap baseMap = Cfg.baseMap half
+        let BaseMap baseMap = Layout.baseMap half
         for_ baseMap (\kll ->
             let kllFile = kll <.> "kll"
                 src = "Layout" </> kllFile
                 dest = "controller/Scan/MDErgo1" </> kllFile
             in copyFileChanged src dest )
     moveDefaultMap = do
-        let DefaultMap defaultMap = Cfg.defaultMap
+        let DefaultMap defaultMap = Layout.defaultMap
         need ["controller/kll"]
         for_ defaultMap (\kll ->
             let kllFile = kll <.> "kll"
@@ -113,7 +112,7 @@ moveKlls half = sequence_ [moveBaseMap, moveDefaultMap, moveLayers]
                 dest = "controller/kll/layouts" </> kllFile
             in copyFileChanged src dest )
     moveLayers = do
-        let PartialMaps layers = Cfg.partialMaps
+        let PartialMaps layers = Layout.partialMaps
         need ["controller/kll"]
         for_ layers (\(Layer layer) ->
             for_ layer (\kll ->
