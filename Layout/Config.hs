@@ -21,8 +21,8 @@ baseMap :: Half -> BaseMap
 baseMap half = BaseMap (always ++ chiral)
   where
     always    = [ "flash-remote" ]
-    rightHalf = [ "flash", "base-right" ]
-    leftHalf  = [ "flash", "base-left" ]
+    rightHalf = [ "flash", "base-right", "lcdFuncMap" ]
+    leftHalf  = [ "flash", "base-left", "lcdFuncMap" ]
     switch    = [ "switch-to-slave-1" ]
 
     chiral = case half of
@@ -33,14 +33,11 @@ baseMap half = BaseMap (always ++ chiral)
 
 defaultMap :: DefaultMap
 defaultMap = DefaultMap
-    [ "lcdFuncMap" ]
+    [ "layer-1" ]
 
 
 
 partialMaps :: PartialMaps
-partialMaps = PartialMaps [layer1, layer2, layer3, layer4]
+partialMaps = PartialMaps [ layer1 ]
   where
-    layer1 = Layer ["layer-1"]
-    layer2 = Layer ["layer-2"]
-    layer3 = Layer ["arrow-keys"]
-    layer4 = Layer ["numpad", "fkeys"]
+    layer1 = Layer ["arrow-keys", "numpad", "fkeys"]
