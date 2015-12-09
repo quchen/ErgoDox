@@ -24,11 +24,13 @@ Usage
       dfu-util
   ```
 
+4. Run `./build` to set up the build system
+
 ### Execution
 
 1. Edit layouts in `Layout/` and configure their interplay in
    `Layout/Config.hs`
-2. Run `./build (left|right)` (first time installs stuff so it takes longer)
+2. Run `./build (left|right)`
     - Build with `--flash` to flash the keyboard after building
 
 
