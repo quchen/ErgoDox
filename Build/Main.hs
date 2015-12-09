@@ -24,8 +24,8 @@ import qualified Layout.Config as Layout
 
 
 
-pprHalf :: Half -> String
-pprHalf = \case
+ppr :: PrimaryHalf -> String
+ppr = \case
     L -> "left"
     R -> "right"
 
@@ -35,9 +35,9 @@ leftHalf = phonyForHalf L
 rightHalf :: Flash -> Rules ()
 rightHalf = phonyForHalf R
 
-phonyForHalf :: Half -> Flash -> Rules ()
-phonyForHalf half flash = phony (pprHalf half) (do
-    need [firmwareFile half]
+phonyForHalf :: PrimaryHalf -> Flash -> Rules ()
+phonyForHalf primaryHalf flash = phony (ppr primaryHalf) (do
+    need [firmwareFile primaryHalf]
     installFirmware )
   where
 
@@ -47,8 +47,8 @@ phonyForHalf half flash = phony (pprHalf half) (do
     installFirmware = case flash of
         NoFlash -> putNormal "Flashing skipped (enable with --flash)"
         FlashAfterBuild -> do
-            need [firmwareFile half]
-            let (wd, firmware) = splitFileName (firmwareFile half)
+            need [firmwareFile primaryHalf]
+            let (wd, firmware) = splitFileName (firmwareFile primaryHalf)
             (Exit e, Stderr stderr) <- cmd (Cwd wd) (Traced "Flashing")
                 "sudo"
                 ["-p", "Root privileges needed to flash uC. Password: "]
@@ -68,16 +68,17 @@ buildPath :: FilePath
 buildPath = ".build"
 
 -- | Final location of the firmware
-firmwareFile :: Half -> FilePath
-firmwareFile half = buildPath </> "ergodox-" <> pprHalf half <.> "dfu.bin"
+firmwareFile :: PrimaryHalf -> FilePath
+firmwareFile primaryHalf =
+    buildPath </> "ergodox-" <> ppr primaryHalf <.> "dfu.bin"
 
 
 
 -- | Compile the firmware a .bin file that can be sent to the keyboard
-buildFirmware :: Half -> Rules ()
-buildFirmware half = firmwareFile half %> (\out -> do
+buildFirmware :: PrimaryHalf -> Rules ()
+buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     moveKlls
-    createWrappedBuildPath
+    dependOnConfig
     cmake
     make
     extractFirmwareTo out )
@@ -89,12 +90,12 @@ buildFirmware half = firmwareFile half %> (\out -> do
     moveKlls = moveBaseMap >> moveDefaultMap >> moveLayers
       where
         moveKll srcDir destDir = \kll ->
-            let kllFile = kll <.> "kll"
+            let kllFile = kll -<.> "kll"
                 src = srcDir </> kllFile
-                dest = destDir </> kllFile
+                dest = destDir </> takeFileName kllFile
             in copyFileChanged src dest
         moveBaseMap = do
-            let BaseMap baseMap = Layout.baseMap half
+            let BaseMap baseMap = Layout.baseMap primaryHalf
             for_ baseMap (moveKll "Layout" "controller/Scan/MDErgo1")
         moveDefaultMap = do
             let DefaultMap defaultMap = Layout.defaultMap
@@ -106,26 +107,32 @@ buildFirmware half = firmwareFile half %> (\out -> do
             for_ layers (\(Layer layer) ->
                 for_ layer (moveKll "Layout" "controller/kll/layouts") )
 
-    createWrappedBuildPath :: Action ()
-    createWrappedBuildPath =
-        cmd (Traced "Creating inner firmware output dir")
-            "mkdir -p" [wrappedBuildPath]
+    -- Add artificial dependencies on the configuration to rebuild when it
+    -- changes
+    dependOnConfig :: Action ()
+    dependOnConfig = do
+        BaseMap     _ <- askOracle (BaseMapDependency     ())
+        DefaultMap  _ <- askOracle (DefaultMapDependency  ())
+        PartialMaps _ <- askOracle (PartialMapsDependency ())
+        pure ()
 
     cmake :: Action ()
-    cmake = cmd
-        (Cwd wrappedBuildPath)
-        (Traced ("Generating " <> pprHalf half <> " makefile"))
-        "cmake"
-        [ "-DCHIP="         <> chip
-        , "-DCOMPILER="     <> compiler
-        , "-DScanModule="   <> scanModule
-        , "-DMacroModule="  <> macroModule
-        , "-DOutputModule=" <> outputModule
-        , "-DDebugModule="  <> debugModule
-        , "-DBaseMap="      <> baseMap
-        , "-DDefaultMap="   <> defaultMap
-        , "-DPartialMaps="  <> partialMaps ]
-        "../.."
+    cmake = do
+        cmd (Traced "")
+            "mkdir -p" [wrappedBuildPath] // ()
+        cmd (Cwd wrappedBuildPath)
+            (Traced ("Generating " <> ppr primaryHalf <> " makefile"))
+            "cmake"
+            [ "-DCHIP="         <> chip
+            , "-DCOMPILER="     <> compiler
+            , "-DScanModule="   <> scanModule
+            , "-DMacroModule="  <> macroModule
+            , "-DOutputModule=" <> outputModule
+            , "-DDebugModule="  <> debugModule
+            , "-DBaseMap="      <> baseMap
+            , "-DDefaultMap="   <> defaultMap
+            , "-DPartialMaps="  <> partialMaps ]
+            "../.."
       where
         Chip         chip         = Build.chip
         Compiler     compiler     = Build.compiler
@@ -134,7 +141,7 @@ buildFirmware half = firmwareFile half %> (\out -> do
         OutputModule outputModule = Build.outputModule
         DebugModule  debugModule  = Build.debugModule
         baseMap =
-            let BaseMap x = Layout.baseMap half
+            let BaseMap x = Layout.baseMap primaryHalf
             in unwords x
         defaultMap =
             let DefaultMap x = Layout.defaultMap
@@ -147,7 +154,7 @@ buildFirmware half = firmwareFile half %> (\out -> do
     make :: Action ()
     make = cmd
         (Cwd wrappedBuildPath)
-        (Traced ("Compiling " <> pprHalf half <> " half"))
+        (Traced ("Compiling " <> ppr primaryHalf <> " primaryHalf"))
         "make"
 
     extractFirmwareTo :: FilePath -> Action ()
@@ -155,7 +162,7 @@ buildFirmware half = firmwareFile half %> (\out -> do
 
     -- | Directory the wrapped build system puts its files to
     wrappedBuildPath :: FilePath
-    wrappedBuildPath = "controller/build/ergodox-" <> pprHalf half
+    wrappedBuildPath = "controller/build/ergodox-" <> ppr primaryHalf
 
     -- | Compiled firmware file as generated by the inner firmware
     wrappedFirmwareFile :: FilePath
@@ -193,6 +200,21 @@ clean = phony "clean" (do
 
 
 
+-- | Oracles to depend on the configuration itself, not only on the KLLs.
+-- This is used to trigger rebuilds when two layers are swapped in the config
+-- without otherwise touching the layouts.
+configOracles :: Rules ()
+configOracles = do
+    _ <- addOracle (\(BaseMapDependency ()) -> pure (
+        let BaseMap leftPrimaryMap  = Layout.baseMap L
+            BaseMap rightPrimaryMap = Layout.baseMap R
+        in  BaseMap (leftPrimaryMap ++ rightPrimaryMap)))
+    _ <- addOracle (\(DefaultMapDependency ()) -> pure Layout.defaultMap)
+    _ <- addOracle (\(PartialMapsDependency ()) -> pure Layout.partialMaps)
+    pure ()
+
+
+
 -- | Postfix version of 'unit'
 (//) :: m () -> a -> m ()
 x // _ = unit x
@@ -219,11 +241,12 @@ main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
     in rules )))
   where
 
-    ruleRecipes flash = mconcat [halves flash, firmware, clean, aux]
+    ruleRecipes flash = mconcat [halves flash, firmware, clean, aux, oracles]
       where
         halves   = leftHalf <> rightHalf
         firmware = buildFirmware L <> buildFirmware R
         aux      = initializeKllDir
+        oracles  = configOracles
 
     handleTargets rules [] = rules
     handleTargets rules targets = want targets >> withoutActions rules

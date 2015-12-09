@@ -15,20 +15,18 @@ import Build.Types
 --
 -- The base layout usually consists of mapping scancodes like 0x1A to
 -- USB codes like U"Esc".
---
--- If you get this wrong the two sides are mirrored. :-)
-baseMap :: Half -> BaseMap
-baseMap half = BaseMap (always ++ chiral)
+baseMap :: PrimaryHalf -> BaseMap
+baseMap primaryHalf = BaseMap (remoteFlashing : firstHalf ++ secondHalf)
   where
-    always    = [ "enable-remote-flashing"
-                , "flash-mode-key-combination" ]
-    rightHalf = [ "scancode-mapping-right" ]
-    leftHalf  = [ "scancode-mapping-left" ]
-    switch    = [ "switch-to-slave-1" ]
+    rightHalf      = [ "scancode-mapping-right" ]
+    leftHalf       = [ "scancode-mapping-left" ]
 
-    chiral = case half of
-        L -> leftHalf  ++ switch ++ rightHalf
-        R -> rightHalf ++ switch ++ leftHalf
+    remoteFlashing = "enable-remote-flashing"
+    switchToSlave  = "switch-to-slave-1"
+    flashkey       = "flash-mode-key-combination"
+    (firstHalf, secondHalf) = case primaryHalf of
+        L -> (flashkey : leftHalf,  switchToSlave : rightHalf)
+        R -> (flashkey : rightHalf, switchToSlave : leftHalf)
 
 
 
