@@ -3,8 +3,6 @@ ErgoDox build system
 
 Fire-and-forget build system for configuring the Infinity Ergodox.
 
-[![Build Status](https://travis-ci.org/quchen/ErgoDox.svg?branch=master)](https://travis-ci.org/quchen/ErgoDox)
-
 
 
 Usage
