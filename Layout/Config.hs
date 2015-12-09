@@ -20,9 +20,10 @@ import Build.Types
 baseMap :: Half -> BaseMap
 baseMap half = BaseMap (always ++ chiral)
   where
-    always    = [ "flash-remote" ]
-    rightHalf = [ "flash", "base-right" ]
-    leftHalf  = [ "flash", "base-left" ]
+    always    = [ "enable-remote-flashing"
+                , "flash-mode-key-combination" ]
+    rightHalf = [ "scancode-mapping-right" ]
+    leftHalf  = [ "scancode-mapping-left" ]
     switch    = [ "switch-to-slave-1" ]
 
     chiral = case half of
