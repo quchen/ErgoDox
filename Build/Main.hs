@@ -38,7 +38,28 @@ rightHalf = phonyForHalf R
 phonyForHalf :: Half -> Flash -> Rules ()
 phonyForHalf half flash = phony (pprHalf half) (do
     need [firmwareFile half]
-    installFirmware half flash )
+    installFirmware )
+  where
+
+    -- Send generated .bin firmware to the keyboard. Requires it to be in
+    -- flashing state.
+    installFirmware :: Action ()
+    installFirmware = case flash of
+        NoFlash -> putNormal "Flashing skipped (enable with --flash)"
+        FlashAfterBuild -> do
+            need [firmwareFile half]
+            let (wd, firmware) = splitFileName (firmwareFile half)
+            (Exit e, Stderr stderr) <- cmd (Cwd wd) (Traced "Flashing")
+                "sudo"
+                ["-p", "Root privileges needed to flash uC. Password: "]
+                "--"
+                "dfu-util"
+                ["--download", firmware]
+            case e of
+                ExitSuccess -> pure ()
+                ExitFailure _e | "No DFU capable USB device" `isInfixOf` stderr
+                    -> fail "No keyboard in flash mode found."
+                _else -> fail stderr
 
 
 
@@ -152,27 +173,6 @@ initializeKllDir = "controller/kll" %> \_ -> do
         "mkdir -p" [dummyPath] // ()
     cmd (Cwd dummyPath) (Traced "Preparing initial dummy build")
         "cmake .."
-
-
-
--- | Send generated .bin firmware to the keyboard. Requires it to be in
--- flashing state.
-installFirmware :: Half -> Flash -> Action ()
-installFirmware _ NoFlash = putNormal "Flashing skipped (enable with --flash)"
-installFirmware half FlashAfterBuild = do
-    need [firmwareFile half]
-    let (wd, firmware) = splitFileName (firmwareFile half)
-    (Exit e, Stderr stderr) <- cmd (Cwd wd) (Traced "Flashing")
-        "sudo"
-        ["-p", "Root privileges needed to flash uC. Password: "]
-        "--"
-        "dfu-util"
-        ["--download", firmware]
-    case e of
-        ExitSuccess -> pure ()
-        ExitFailure _e | "No DFU capable USB device" `isInfixOf` stderr
-            -> fail "No keyboard in flash mode found."
-        _else -> fail stderr
 
 
 
