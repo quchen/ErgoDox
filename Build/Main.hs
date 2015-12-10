@@ -111,9 +111,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     -- changes
     dependOnConfig :: Action ()
     dependOnConfig = do
-        BaseMap     _ <- askOracle (BaseMapDependency     ())
-        DefaultMap  _ <- askOracle (DefaultMapDependency  ())
-        PartialMaps _ <- askOracle (PartialMapsDependency ())
+        ConfigDependency _ <- askOracle (ConfigDependency Nothing)
         pure ()
 
     cmake :: Action ()
@@ -203,14 +201,13 @@ clean = phony "clean" (do
 -- | Oracles to depend on the configuration itself, not only on the KLLs.
 -- This is used to trigger rebuilds when two layers are swapped in the config
 -- without otherwise touching the layouts.
-configOracles :: Rules ()
-configOracles = do
-    _ <- addOracle (\(BaseMapDependency ()) -> pure (
-        let BaseMap leftPrimaryMap  = Layout.baseMap L
-            BaseMap rightPrimaryMap = Layout.baseMap R
-        in  BaseMap (leftPrimaryMap ++ rightPrimaryMap)))
-    _ <- addOracle (\(DefaultMapDependency ()) -> pure Layout.defaultMap)
-    _ <- addOracle (\(PartialMapsDependency ()) -> pure Layout.partialMaps)
+configOracle :: Rules ()
+configOracle = do
+    _ <- addOracle (\(ConfigDependency _) -> pure (
+        ConfigDependency (Just ( Layout.baseMap L
+                               , Layout.baseMap R
+                               , Layout.defaultMap
+                               , Layout.partialMaps ))))
     pure ()
 
 
@@ -246,7 +243,7 @@ main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
         halves   = leftHalf <> rightHalf
         firmware = buildFirmware L <> buildFirmware R
         aux      = initializeKllDir
-        oracles  = configOracles
+        oracles  = configOracle
 
     handleTargets rules [] = rules
     handleTargets rules targets = want targets >> withoutActions rules

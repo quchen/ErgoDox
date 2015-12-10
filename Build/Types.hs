@@ -6,12 +6,10 @@ module Build.Types (
     PrimaryHalf(..),
 
     BaseMap(..),
-    BaseMapDependency(..),
     DefaultMap(..),
-    DefaultMapDependency(..),
     PartialMaps(..),
-    PartialMapsDependency(..),
     Layer(..),
+    ConfigDependency(..),
 
     Chip(..),
     Compiler(..),
@@ -34,21 +32,16 @@ data PrimaryHalf = L | R
 
 newtype BaseMap = BaseMap [FilePath]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-newtype BaseMapDependency = BaseMapDependency ()
-    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-
 newtype DefaultMap = DefaultMap [FilePath]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-newtype DefaultMapDependency = DefaultMapDependency ()
-    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-
 newtype PartialMaps = PartialMaps [Layer]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-newtype PartialMapsDependency = PartialMapsDependency ()
-    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-
 newtype Layer = Layer [FilePath]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
+newtype ConfigDependency =
+    ConfigDependency (Maybe (BaseMap, BaseMap, DefaultMap, PartialMaps))
+    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
+
 
 
 
