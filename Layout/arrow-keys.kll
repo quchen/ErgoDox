@@ -11,8 +11,11 @@ U"J" : U"Left";
 U"K" : U"Down";
 U"L" : U"Right";
 
-U"H" : U"Home";
-U"Semicolon" : U"End";
+U"U" : U"Home";
+U"O" : U"End";
 
-U"8" : U"PageUp";
-U"Comma" : U"PageDown";
+U"Y" : U"PageUp";
+U"H" : U"PageDown";
+
+U"N" : U"Undo";
+U"M" : U"Again";

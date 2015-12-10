@@ -6,14 +6,14 @@ KLL = 0.3c;
 # Modified Date
 Date = 2015-12-08;
 
-U"J"      : U"Keypad 1";
-U"K"      : U"Keypad 2";
-U"L"      : U"Keypad 3";
-U"U"      : U"Keypad 4";
-U"I"      : U"Keypad 5";
-U"O"      : U"Keypad 6";
-U"7"      : U"Keypad 7";
-U"8"      : U"Keypad 8";
-U"9"      : U"Keypad 9";
-U"M"      : U"Keypad 0";
+U"X"      : U"Keypad 1";
+U"C"      : U"Keypad 2";
+U"V"      : U"Keypad 3";
+U"S"      : U"Keypad 4";
+U"D"      : U"Keypad 5";
+U"F"      : U"Keypad 6";
+U"W"      : U"Keypad 7";
+U"E"      : U"Keypad 8";
+U"R"      : U"Keypad 9";
+U"B"      : U"Keypad 0";
 U"Enter"  : U"Keypad Enter";
