@@ -47,7 +47,7 @@ S0x0C : U"T";
 S0x0B : U"Tab"; # Top 1.5
 
 # Middle row
-S0x1A : None;
+S0x1A : U"LCtrl";
 S0x19 : U"A";
 S0x18 : U"S";
 S0x17 : U"D";
@@ -64,7 +64,7 @@ S0x1E : U"B";
 S0x1D : None; # Bottom 1.5
 
 # Bottom row
-S0x2C : U"LCtrl";
+S0x2C : None;
 S0x2B : None;
 S0x2A : None;
 S0x29 : None;
