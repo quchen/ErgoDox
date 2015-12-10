@@ -111,7 +111,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     -- changes
     dependOnConfig :: Action ()
     dependOnConfig = do
-        ConfigDependency _ <- askOracle (ConfigDependency Nothing)
+        ConfigDependencyA _ <- askOracle (ConfigDependencyQ primaryHalf)
         pure ()
 
     cmake :: Action ()
@@ -198,16 +198,15 @@ clean = phony "clean" (do
 
 
 
--- | Oracles to depend on the configuration itself, not only on the KLLs.
--- This is used to trigger rebuilds when two layers are swapped in the config
--- without otherwise touching the layouts.
+-- | Oracles to depend on the configuration (as in Config.hs). This is used
+-- to trigger rebuilds when layouts are changed without touching the KLLs,
+-- for example when layers are swapped.
 configOracle :: Rules ()
 configOracle = do
-    _ <- addOracle (\(ConfigDependency _) -> pure (
-        ConfigDependency (Just ( Layout.baseMap L
-                               , Layout.baseMap R
-                               , Layout.defaultMap
-                               , Layout.partialMaps ))))
+    _ <- addOracle (\(ConfigDependencyQ primaryHalf) -> pure (
+        ConfigDependencyA ( Layout.baseMap primaryHalf
+                          , Layout.defaultMap
+                          , Layout.partialMaps )))
     pure ()
 
 

@@ -1,16 +1,23 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE BangPatterns               #-}
 
 module Build.Types (
 
     PrimaryHalf(..),
 
+    -- * User-facing config
     BaseMap(..),
     DefaultMap(..),
     PartialMaps(..),
     Layer(..),
-    ConfigDependency(..),
 
+    -- * For oracles
+    ConfigDependencyQ(..),
+    ConfigDependencyA(..),
+
+    -- * Internal config
     Chip(..),
     Compiler(..),
     DebugModule(..),
@@ -22,11 +29,16 @@ module Build.Types (
 
 
 
+import GHC.Generics (Generic)
+
 import Development.Shake.Classes
 
 
-
 data PrimaryHalf = L | R
+    deriving (Eq, Show, Generic)
+instance Binary PrimaryHalf
+instance NFData PrimaryHalf
+instance Hashable PrimaryHalf
 
 
 
@@ -38,8 +50,12 @@ newtype PartialMaps = PartialMaps [Layer]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 newtype Layer = Layer [FilePath]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-newtype ConfigDependency =
-    ConfigDependency (Maybe (BaseMap, BaseMap, DefaultMap, PartialMaps))
+
+
+
+newtype ConfigDependencyQ = ConfigDependencyQ PrimaryHalf
+    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
+newtype ConfigDependencyA = ConfigDependencyA (BaseMap, DefaultMap, PartialMaps)
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 
 

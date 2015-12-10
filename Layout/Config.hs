@@ -22,8 +22,8 @@ baseMap primaryHalf = BaseMap (remoteFlashing : firstHalf ++ secondHalf)
     leftHalf       = [ "scancode-mapping-left" ]
 
     remoteFlashing = "enable-remote-flashing"
-    switchToSlave  = "switch-to-slave-1"
     flashkey       = "flash-mode-key-combination"
+    switchToSlave  = "switch-to-slave-1"
     (firstHalf, secondHalf) = case primaryHalf of
         L -> (flashkey : leftHalf,  switchToSlave : rightHalf)
         R -> (flashkey : rightHalf, switchToSlave : leftHalf)
