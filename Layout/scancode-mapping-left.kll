@@ -57,7 +57,7 @@ S0x20 : U"C";
 S0x21 : U"X";
 S0x22 : U"Z";
 S0x23 : U"LShift";
-S0x24 : U"Home";
+S0x24 : None;
 S0x25 : U"Delete";
 S0x26 : U"Backspace";
 S0x27 : U"CapsLock";
