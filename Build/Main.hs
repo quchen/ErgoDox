@@ -192,9 +192,7 @@ clean = phony "clean" (do
     gitClean "controller/kll" )
   where
     gitClean :: FilePath -> Action ()
-    gitClean dir =
-        cmd (Cwd dir) (Traced "")
-            "git clean -df"
+    gitClean dir = cmd (Cwd dir) (Traced "") "git clean -dfq"
 
 
 
