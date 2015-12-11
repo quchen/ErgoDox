@@ -1,0 +1,29 @@
+name:                ergodox
+version:             0.1.0.0
+synopsis:            Fire-and-forget build system for configuring the Infinity Ergodox
+license:             PublicDomain
+author:              David Luposchainsky <dluposchainsky on googles email service>
+maintainer:          David Luposchainsky <dluposchainsky on googles email service>
+copyright:           David Luposchainsky <dluposchainsky on googles email service>
+category:            Development
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/quchen/ErgoDox
+
+executable ergodox
+  main-is:             Build/Main.hs
+  other-modules:       Build.Main
+                     , Build.Types
+                     , Build.WrappedBuildSystemConfig
+  other-extensions:    LambdaCase
+                     , GeneralizedNewtypeDeriving
+                     , DeriveDataTypeable
+                     , DeriveGeneric
+                     , BangPatterns
+  build-depends:       base >=4.8 && <4.9
+                     , shake >=0.15 && <0.16
+  default-language:    Haskell2010

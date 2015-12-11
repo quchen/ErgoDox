@@ -3,7 +3,7 @@
 
 -- | Fire-and-forget build script to configure the Infinity Ergodox
 -- firmware.
-module Build.Main (main) where
+module Main (main) where
 
 
 

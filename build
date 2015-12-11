@@ -7,11 +7,12 @@ jobs=""
 if [[ ! -e .cabal-sandbox ]]; then
     echo "No Cabal sandbox found. Installing Shake."
     cabal sandbox init
-    cabal install shake \
-        -j$numCpus \
-        --ghc-options=-j$numCpus \
-        --disable-profiling \
+    cabal install                      \
+        -j$numCpus                     \
+        --ghc-options=-j$numCpus       \
+        --disable-profiling            \
         --disable-executable-profiling \
+        --dependencies-only            \
         &
     jobs+=" $!"
 fi

@@ -2,3 +2,4 @@
 .shake
 cabal.sandbox.config
 .build
+dist
