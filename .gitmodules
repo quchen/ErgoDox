@@ -1,3 +1,4 @@
 [submodule "controller"]
 	path = controller
 	url = https://github.com/kiibohd/controller.git
+    ignore = dirty
