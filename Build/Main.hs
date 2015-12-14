@@ -153,7 +153,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     make = cmd
         (Cwd wrappedBuildPath)
         (Traced ("Compiling " <> ppr primaryHalf <> " primaryHalf"))
-        "make"
+        "make -j"
 
     extractFirmwareTo :: FilePath -> Action ()
     extractFirmwareTo out = copyFileChanged wrappedFirmwareFile out
