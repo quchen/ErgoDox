@@ -1,5 +1,6 @@
-.cabal-sandbox
+.cabal*
 .shake
 cabal.sandbox.config
 .build
+.stack*
 dist

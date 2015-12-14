@@ -1,6 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# OPTIONS_GHC -Wall #-}
-
 -- | Fire-and-forget build script to configure the Infinity Ergodox
 -- firmware.
 module Main (main) where
@@ -11,6 +8,7 @@ import Data.Foldable
 import Data.List (intercalate, isInfixOf)
 import Data.Monoid
 import System.Console.GetOpt
+import System.Directory
 import System.Exit
 
 import Development.Shake hiding (addPath)
@@ -114,8 +112,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
 
     cmake :: Action ()
     cmake = do
-        cmd (Traced "")
-            "mkdir -p" [wrappedBuildPath] // ()
+        liftIO (createDirectoryIfMissing True wrappedBuildPath)
         cmd (Cwd wrappedBuildPath)
             (Traced ("Generating " <> ppr primaryHalf <> " makefile"))
             "cmake"
@@ -172,8 +169,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
 initializeKllDir :: Rules ()
 initializeKllDir = "controller/kll" %> \_ -> do
     let dummyPath = "controller/dummy"
-    cmd (Traced "Creating dummy output dir")
-        "mkdir -p" [dummyPath] // ()
+    liftIO (createDirectoryIfMissing True dummyPath)
     cmd (Cwd dummyPath) (Traced "Preparing initial dummy build")
         "cmake .."
 
@@ -210,9 +206,9 @@ configOracle = do
 
 
 -- | Postfix version of 'unit'
-(//) :: m () -> a -> m ()
-x // _ = unit x
-infix 1 //
+-- (//) :: m () -> a -> m ()
+-- x // _ = unit x
+-- infix 1 //
 
 
 

@@ -19,6 +19,11 @@ executable ergodox
   other-modules:       Build.Main
                      , Build.Types
                      , Build.WrappedBuildSystemConfig
+                     , Layout.Config
+  default-extensions:  LambdaCase
+                     , BangPatterns
+                     , MultiWayIf
+                     , TupleSections
   other-extensions:    LambdaCase
                      , GeneralizedNewtypeDeriving
                      , DeriveDataTypeable
@@ -26,4 +31,6 @@ executable ergodox
                      , BangPatterns
   build-depends:       base >=4.8 && <4.9
                      , shake >=0.15 && <0.16
+                     , directory
   default-language:    Haskell2010
+  ghc-options:         -Wall -rtsopts -with-rtsopts=-I0

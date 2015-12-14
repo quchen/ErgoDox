@@ -2,29 +2,32 @@
 
 set -euo pipefail
 
+###############################################################################
+# Parallel setup
+###############################################################################
+
 numCpus="$(grep -c "^processor" /proc/cpuinfo)"
 jobs=""
-if [[ ! -e .cabal-sandbox ]]; then
-    echo "No Cabal sandbox found. Installing Shake."
-    cabal sandbox init
-    cabal install                      \
-        -j$numCpus                     \
-        --ghc-options=-j$numCpus       \
-        --disable-profiling            \
-        --disable-executable-profiling \
-        --dependencies-only            \
-        &
-    jobs+=" $!"
-fi
+
+stack build &
+jobs+=" $!"
+
 if [[ ! -e controller/.git ]]; then
     echo "Firmware directory not found. Updating submodules."
     git submodule init
     git submodule update &
     jobs+=" $!"
 fi
+
 for job in $jobs; do
     wait "$job"
 done
+
+
+
+###############################################################################
+# Configure script dir
+###############################################################################
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
@@ -35,12 +38,10 @@ done
 SELFDIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 cd $SELFDIR
 
-export EUID
 
-cabal exec runghc -- \
-    -Wall \
-    -rtsopts -with-rtsopts=-I0 \
-    -XLambdaCase \
-    Build/Main.hs \
-    --colour \
-    "$@"
+
+###############################################################################
+# Run build script
+###############################################################################
+
+stack exec -- ergodox --colour "$@"
