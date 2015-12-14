@@ -3,8 +3,6 @@
 
 -- | Fire-and-forget build script to configure the Infinity Ergodox
 -- firmware.
---
--- Userland configuration is in "Config.hs".
 module Build.Main (main) where
 
 
