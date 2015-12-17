@@ -14,6 +14,7 @@ import System.Exit
 import Development.Shake hiding (addPath)
 import Development.Shake.FilePath
 
+import Build.Oracles
 import Build.Types
 import qualified Build.WrappedBuildSystemConfig as Build
 import qualified Layout.Config as Layout
@@ -74,7 +75,7 @@ firmwareFile primaryHalf =
 buildFirmware :: PrimaryHalf -> Rules ()
 buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     moveKlls
-    dependOnConfig
+    dependOnConfig primaryHalf
     cmake
     make
     extractFirmwareTo out )
@@ -102,13 +103,6 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
             need ["controller/kll"]
             for_ layers (\(Layer layer) ->
                 for_ layer (moveKll "Layout" "controller/kll/layouts") )
-
-    -- Add artificial dependencies on the configuration to rebuild when it
-    -- changes
-    dependOnConfig :: Action ()
-    dependOnConfig = do
-        ConfigDependencyA _ <- askOracle (ConfigDependencyQ primaryHalf)
-        pure ()
 
     cmake :: Action ()
     cmake = do
@@ -192,19 +186,6 @@ clean = phony "clean" (do
 
 
 
--- | Oracles to depend on the configuration (as in Config.hs). This is used
--- to trigger rebuilds when layouts are changed without touching the KLLs,
--- for example when layers are swapped.
-configOracle :: Rules ()
-configOracle = do
-    _ <- addOracle (\(ConfigDependencyQ primaryHalf) -> pure (
-        ConfigDependencyA ( Layout.baseMap primaryHalf
-                          , Layout.defaultMap
-                          , Layout.partialMaps )))
-    pure ()
-
-
-
 -- | Postfix version of 'unit'
 -- (//) :: m () -> a -> m ()
 -- x // _ = unit x
@@ -236,7 +217,6 @@ main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
         halves   = leftHalf <> rightHalf
         firmware = buildFirmware L <> buildFirmware R
         aux      = initializeKllDir
-        oracles  = configOracle
 
     handleTargets rules [] = rules
     handleTargets rules targets = want targets >> withoutActions rules

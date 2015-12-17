@@ -17,6 +17,7 @@ source-repository head
 executable ergodox
   main-is:             Build/Main.hs
   other-modules:       Build.Main
+                     , Build.Oracles
                      , Build.Types
                      , Build.WrappedBuildSystemConfig
                      , Layout.Config

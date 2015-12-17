@@ -1,5 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE BangPatterns               #-}
 
@@ -12,10 +11,6 @@ module Build.Types (
     DefaultMap(..),
     PartialMaps(..),
     Layer(..),
-
-    -- * For oracles
-    ConfigDependencyQ(..),
-    ConfigDependencyA(..),
 
     -- * Internal config
     Chip(..),
@@ -49,13 +44,6 @@ newtype DefaultMap = DefaultMap [FilePath]
 newtype PartialMaps = PartialMaps [Layer]
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 newtype Layer = Layer [FilePath]
-    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-
-
-
-newtype ConfigDependencyQ = ConfigDependencyQ PrimaryHalf
-    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-newtype ConfigDependencyA = ConfigDependencyA (BaseMap, DefaultMap, PartialMaps)
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 
 
