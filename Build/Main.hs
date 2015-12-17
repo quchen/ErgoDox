@@ -17,7 +17,6 @@ import Development.Shake.FilePath
 import Build.Oracles
 import Build.Types
 import qualified Build.WrappedBuildSystemConfig as Build
-import qualified Layout.Config as Layout
 
 
 
@@ -75,7 +74,6 @@ firmwareFile primaryHalf =
 buildFirmware :: PrimaryHalf -> Rules ()
 buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     moveKlls
-    dependOnConfig primaryHalf
     cmake
     make
     extractFirmwareTo out )
@@ -84,29 +82,28 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     -- Move .kll files to their appropriate target folder so the compilation
     -- script has them in the right locations
     moveKlls :: Action ()
-    moveKlls = moveBaseMap >> moveDefaultMap >> moveLayers
+    moveKlls = do
+        (BaseMap baseMap, DefaultMap defaultMap, PartialMaps layers)
+            <- keyboardConfig primaryHalf
+        for_ baseMap (moveKll "Layout" "controller/Scan/MDErgo1")
+        need ["controller/kll"]
+        for_ defaultMap (moveKll "Layout" "controller/kll/layouts")
+        for_ layers (\(Layer layer) ->
+            for_ layer (moveKll "Layout" "controller/kll/layouts") )
       where
         moveKll srcDir destDir = \kll ->
             let kllFile = kll -<.> "kll"
                 src = srcDir </> kllFile
                 dest = destDir </> takeFileName kllFile
             in copyFileChanged src dest
-        moveBaseMap = do
-            let BaseMap baseMap = Layout.baseMap primaryHalf
-            for_ baseMap (moveKll "Layout" "controller/Scan/MDErgo1")
-        moveDefaultMap = do
-            let DefaultMap defaultMap = Layout.defaultMap
-            need ["controller/kll"]
-            for_ defaultMap (moveKll "Layout" "controller/kll/layouts")
-        moveLayers = do
-            let PartialMaps layers = Layout.partialMaps
-            need ["controller/kll"]
-            for_ layers (\(Layer layer) ->
-                for_ layer (moveKll "Layout" "controller/kll/layouts") )
+
+
 
     cmake :: Action ()
     cmake = do
         liftIO (createDirectoryIfMissing True wrappedBuildPath)
+        (baseMap, defaultMap, partialMaps)
+            <- fmap convertToCmakeParams (keyboardConfig primaryHalf)
         cmd (Cwd wrappedBuildPath)
             (Traced ("Generating " <> ppr primaryHalf <> " makefile"))
             "cmake"
@@ -127,16 +124,11 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
         MacroModule  macroModule  = Build.macroModule
         OutputModule outputModule = Build.outputModule
         DebugModule  debugModule  = Build.debugModule
-        baseMap =
-            let BaseMap x = Layout.baseMap primaryHalf
-            in unwords x
-        defaultMap =
-            let DefaultMap x = Layout.defaultMap
-            in unwords x
-        partialMaps =
-            let PartialMaps pms = Layout.partialMaps
-                layers = [ unwords layer | Layer layer <- pms]
-            in intercalate ";" layers
+
+        convertToCmakeParams (BaseMap bm, DefaultMap dm, PartialMaps layers) =
+            ( unwords bm
+            , unwords dm
+            , intercalate ";" [ unwords layer | Layer layer <- layers] )
 
     make :: Action ()
     make = cmd

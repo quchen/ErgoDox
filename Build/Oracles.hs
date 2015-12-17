@@ -2,7 +2,7 @@
 
 module Build.Oracles (
     oracles,
-    dependOnConfig
+    keyboardConfig
 ) where
 
 
@@ -12,7 +12,6 @@ import Development.Shake.Classes
 
 import Build.Types
 import Layout.Config
-
 
 
 
@@ -28,10 +27,10 @@ newtype ConfigDependencyA = ConfigDependencyA (BaseMap, DefaultMap, PartialMaps)
 
 -- Add artificial dependencies on the configuration to rebuild when it
 -- changes
-dependOnConfig :: PrimaryHalf -> Action ()
-dependOnConfig primaryHalf= do
-    ConfigDependencyA _ <- askOracle (ConfigDependencyQ primaryHalf)
-    pure ()
+keyboardConfig :: PrimaryHalf -> Action (BaseMap, DefaultMap, PartialMaps)
+keyboardConfig primaryHalf = do
+    ConfigDependencyA x <- askOracle (ConfigDependencyQ primaryHalf)
+    pure x
 
 -- | Oracle to depend on the configuration (as in Config.hs). This is used
 -- to trigger rebuilds when layouts are changed without touching the KLLs,
