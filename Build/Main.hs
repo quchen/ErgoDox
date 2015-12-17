@@ -83,11 +83,12 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     -- script has them in the right locations
     moveKlls :: Action ()
     moveKlls = do
-        (BaseMap baseMap, DefaultMap defaultMap, PartialMaps layers)
-            <- keyboardConfig primaryHalf
+        BaseMap baseMap <- baseMapConfig primaryHalf
         for_ baseMap (moveKll "Layout" "controller/Scan/MDErgo1")
         need ["controller/kll"]
+        DefaultMap defaultMap <- defaultMapConfig
         for_ defaultMap (moveKll "Layout" "controller/kll/layouts")
+        PartialMaps layers <- partialMapsConfig
         for_ layers (\(Layer layer) ->
             for_ layer (moveKll "Layout" "controller/kll/layouts") )
       where
@@ -102,8 +103,17 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     cmake :: Action ()
     cmake = do
         liftIO (createDirectoryIfMissing True wrappedBuildPath)
-        (baseMap, defaultMap, partialMaps)
-            <- fmap convertToCmakeParams (keyboardConfig primaryHalf)
+        baseMap <- do
+            BaseMap baseMapKlls <- baseMapConfig primaryHalf
+            pure (unwords baseMapKlls)
+        defaultMap <- do
+            DefaultMap defaultMapKlls <- defaultMapConfig
+            pure (unwords defaultMapKlls)
+        partialMaps <- do
+            PartialMaps layers <- partialMapsConfig
+            let collapsedLayers = [ unwords layer | Layer layer <- layers ]
+                collapsedPartialMaps = intercalate ";" collapsedLayers
+            pure collapsedPartialMaps
         cmd (Cwd wrappedBuildPath)
             (Traced ("Generating " <> ppr primaryHalf <> " makefile"))
             "cmake"
@@ -125,10 +135,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
         OutputModule outputModule = Build.outputModule
         DebugModule  debugModule  = Build.debugModule
 
-        convertToCmakeParams (BaseMap bm, DefaultMap dm, PartialMaps layers) =
-            ( unwords bm
-            , unwords dm
-            , intercalate ";" [ unwords layer | Layer layer <- layers] )
+
 
     make :: Action ()
     make = cmd
@@ -199,9 +206,9 @@ flagSpecs =
 
 main :: IO ()
 main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
-    let rulesFlagged = ruleRecipes (flashFlag flags)
-        rules = handleTargets rulesFlagged targets
-    in rules )))
+    let rules = ruleRecipes (flashFlag flags)
+        runRules = rules `runGiven` targets
+    in runRules )))
   where
 
     ruleRecipes flash = mconcat [halves flash, firmware, clean, aux, oracles]
@@ -210,8 +217,8 @@ main = shakeArgsWith options flagSpecs (\flags targets -> return (Just (
         firmware = buildFirmware L <> buildFirmware R
         aux      = initializeKllDir
 
-    handleTargets rules [] = rules
-    handleTargets rules targets = want targets >> withoutActions rules
+    rules `runGiven` [] = rules
+    rules `runGiven` targets = want targets >> withoutActions rules
 
     flashFlag flags | FlashFlag `elem` flags = FlashAfterBuild
                     | otherwise              = NoFlash

@@ -2,7 +2,10 @@
 
 module Build.Oracles (
     oracles,
-    keyboardConfig
+
+    baseMapConfig,
+    defaultMapConfig,
+    partialMapsConfig
 ) where
 
 
@@ -16,28 +19,42 @@ import Layout.Config
 
 
 oracles :: Rules ()
-oracles = dependOnConfigOracle
+oracles = mconcat [ baseMapConfigOracle
+                  , defaultMapConfigOracle
+                  , partialMapsConfigOracle ]
 
 
 
-newtype ConfigDependencyQ = ConfigDependencyQ PrimaryHalf
+newtype BaseMapQ = BaseMapQ PrimaryHalf
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
-newtype ConfigDependencyA = ConfigDependencyA (BaseMap, DefaultMap, PartialMaps)
+
+baseMapConfig :: PrimaryHalf -> Action BaseMap
+baseMapConfig primaryHalf = askOracle (BaseMapQ primaryHalf)
+
+baseMapConfigOracle :: Rules ()
+baseMapConfigOracle = () <$
+    addOracle (\(BaseMapQ primaryHalf) -> pure (baseMap primaryHalf))
+
+
+
+newtype DefaultMapQ = DefaultMapQ ()
     deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
 
--- Add artificial dependencies on the configuration to rebuild when it
--- changes
-keyboardConfig :: PrimaryHalf -> Action (BaseMap, DefaultMap, PartialMaps)
-keyboardConfig primaryHalf = do
-    ConfigDependencyA x <- askOracle (ConfigDependencyQ primaryHalf)
-    pure x
+defaultMapConfig :: Action DefaultMap
+defaultMapConfig = askOracle (DefaultMapQ ())
 
--- | Oracle to depend on the configuration (as in Config.hs). This is used
--- to trigger rebuilds when layouts are changed without touching the KLLs,
--- for example when layers are swapped.
-dependOnConfigOracle :: Rules ()
-dependOnConfigOracle = () <$
-    addOracle (\(ConfigDependencyQ primaryHalf) -> pure (
-        ConfigDependencyA ( baseMap primaryHalf
-                          , defaultMap
-                          , partialMaps )))
+defaultMapConfigOracle :: Rules ()
+defaultMapConfigOracle = () <$
+    addOracle (\(DefaultMapQ _) -> pure defaultMap)
+
+
+
+newtype PartialMapsQ = PartialMapsQ ()
+    deriving (Show, Typeable, Eq, Hashable, Binary, NFData)
+
+partialMapsConfig :: Action PartialMaps
+partialMapsConfig = askOracle (PartialMapsQ ())
+
+partialMapsConfigOracle :: Rules ()
+partialMapsConfigOracle = () <$
+    addOracle (\(PartialMapsQ _) -> pure partialMaps)
