@@ -140,7 +140,7 @@ buildFirmware primaryHalf = firmwareFile primaryHalf %> (\out -> do
     make :: Action ()
     make = cmd
         (Cwd wrappedBuildPath)
-        (Traced ("Compiling " <> ppr primaryHalf <> " primaryHalf"))
+        (Traced ("Compiling " <> ppr primaryHalf <> " primary half"))
         "make -j"
 
     extractFirmwareTo :: FilePath -> Action ()
