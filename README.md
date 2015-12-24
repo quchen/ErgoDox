@@ -1,7 +1,7 @@
 ErgoDox build system
 ====================
 
-Fire-and-forget build system for configuring the Infinity Ergodox.
+Fire-and-forget build system for configuring the [Infinity Ergodox][dox].
 
 
 
@@ -43,3 +43,7 @@ Directory contents
 - `Layout`: Key layout configuration
 - `build`: Build system entry point
 - `README.md`: This file
+
+
+
+[dox]: http://input.club/devices/infinity-ergodox
