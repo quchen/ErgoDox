@@ -11,10 +11,10 @@ Usage
 ### Installation
 
 1. Clone this repo
-2. Install current GHC+Cabal for running Haskell
+2. [Install Stack][stack-install]
 3. Install prerequisite packages
 
-  ```
+  ```bash
   sudo apt-get install       \
       cmake                  \
       ctags                  \
@@ -43,7 +43,8 @@ Directory contents
 - `Layout`: Key layout configuration
 - `build`: Build system entry point
 - `README.md`: This file
-
+- `Setup.hs`, `stack.yaml`, `ergodox.cabal`: Haskell auxiliary files
 
 
 [dox]: http://input.club/devices/infinity-ergodox
+[stack-install]: http://docs.haskellstack.org/en/stable/README.html#how-to-install
